@@ -13,3 +13,12 @@ class VideoWatch(models.Model):
         
     def __str__(self):
         return f"Video {self.video_id} watched at {self.watched_at}"
+
+class VideoPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    caption = models.CharField(max_length=255, blank=True)
+    video_url = models.URLField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}: {self.caption[:30]}"

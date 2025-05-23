@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse, FileResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from .models import VideoWatch
+from django.db import models
+from .models import VideoWatch, VideoPost  # Replace with your actual model
 import os
 import json
 
@@ -101,4 +102,28 @@ def track_video_watch(request):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-# Function that will recommend videos based on past videos watched by the user(saved in sqlite database)
+@csrf_exempt
+def video_feed(request):
+    user_id = request.GET.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'user_id is required'}, status=400)
+
+    # Get IDs of videos the user has already watched
+    watched_videos = VideoWatch.objects.filter(user_id=user_id).values_list('video_id', flat=True)
+
+    # Recommend videos not yet watched, ordered by popularity (number of watches)
+    recommended = (
+        VideoWatch.objects
+        .exclude(video_id__in=watched_videos)
+        .values('video_id')
+        .annotate(watch_count=models.Count('id'))
+        .order_by('-watch_count')[:10]
+    )
+
+    # Return just the video IDs for simplicity
+    return JsonResponse({'feed': [v['video_id'] for v in recommended]}, status=200)
+
+def feed(request):
+    # Fetch latest posts, adjust model/fields as needed
+    posts = VideoPost.objects.order_by('-created_at')[:20]
+    return render(request, 'index.html', {'posts': posts})
