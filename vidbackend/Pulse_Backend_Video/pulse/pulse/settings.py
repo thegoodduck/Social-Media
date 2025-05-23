@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'backendvid',  # Your app name
+    'backendvid',
+    'rest_framework'  # Your app name
 ]
 
 MIDDLEWARE = [
