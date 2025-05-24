@@ -48,32 +48,31 @@
           <input type="text" name="caption" class="w-full p-2 rounded border" required>
         </div>
         <div class="mb-2">
-          <label class="block text-sm font-medium mb-1">Video ID (filename without .mp4)</label>
-          <input type="text" name="video_id" class="w-full p-2 rounded border" required>
-        </div>
-        <div class="mb-2">
           <label class="block text-sm font-medium mb-1">Video File (.mp4)</label>
           <input type="file" name="video_file" accept="video/mp4" class="w-full p-2 rounded border" required>
         </div>
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Create Post</button>
       </form>
-      {% for post in posts %}
-      <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow">
-        <div class="flex items-center gap-3 mb-2">
-          <img src="https://i.pravatar.cc/40" class="rounded-full w-10 h-10" />
-          <div>
-            <div class="font-semibold">{{ post.user.username }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">@{{ post.user.username }}</div>
+      {% if posts %}
+        {% for post in posts %}
+          <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow">
+            <div class="flex items-center gap-3 mb-2">
+              <img src="https://i.pravatar.cc/40" class="rounded-full w-10 h-10" />
+              <div>
+                <div class="font-semibold">{{ post.user.username }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">@{{ post.user.username }}</div>
+              </div>
+            </div>
+            <p class="text-sm mb-2">{{ post.caption }}</p>
+            <video controls class="w-full">
+              <source src="{{ post.video_url }}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
           </div>
-        </div>
-        <p class="text-sm mb-2">{{ post.caption }}</p>
-        {% if post.video_url %}
-        <video controls src="{{ post.video_url }}" class="w-full rounded-xl"></video>
-        {% endif %}
-      </div>
-      {% empty %}
-      <div>No posts available.</div>
-      {% endfor %}
+        {% endfor %}
+      {% else %}
+        <p>No posts available.</p>
+      {% endif %}
     </section>
 
     <!-- Right Sidebar -->

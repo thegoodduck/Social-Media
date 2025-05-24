@@ -7,6 +7,7 @@ from django.db import models
 from .models import VideoWatch, VideoPost  # Replace with your actual model
 import os
 import json
+import uuid  # Import the UUID module
 
 
 # Create your views here.
@@ -142,32 +143,66 @@ def feed(request):
         .annotate(watch_count=models.Count('id'))
         .order_by('-watch_count')[:10]
     )
-    # Get VideoPost objects for recommended video_ids
-    video_ids = [v['video_id'] for v in recommended]
-    posts = VideoPost.objects.filter(id__in=video_ids)
+
+    # Ensure video_ids are strings and strip any whitespace
+    video_ids = [str(v['video_id']).strip() for v in recommended]
+
+    # Normalize video_ids in VideoPost query
+    posts = VideoPost.objects.filter(video_id__in=video_ids).annotate(normalized_id=models.F('video_id'))
+    posts = posts.filter(normalized_id__in=video_ids)
+
+    # Include all posts in the feed, prioritizing recommended ones
+    if video_ids:
+        posts = VideoPost.objects.filter(video_id__in=video_ids).order_by('-id')
+    else:
+        posts = VideoPost.objects.all().order_by('-id')[:10]
+
+    # Debugging: Log video_ids fetched from VideoPost
+    fetched_video_ids = list(VideoPost.objects.filter(video_id__in=video_ids).values_list('video_id', flat=True))
+    print("Fetched VideoPost video_ids:", fetched_video_ids)
+
+    # Log missing VideoPost entries for recommended video_ids
+    missing_video_ids = [v for v in video_ids if not VideoPost.objects.filter(video_id=v).exists()]
+    if missing_video_ids:
+        print("Missing VideoPost entries for video_ids:", missing_video_ids)
+
+    print("Watched Videos:", list(watched_videos))
+    print("Recommended:", list(recommended))
+    print("Posts being sent to template:", posts)  # Debugging line
 
     return render(request, 'index.html', {'posts': posts, 'user_id': user_id})
 
 @csrf_exempt
 def create_post(request):
     if request.method == 'POST':
-        user = request.user if request.user.is_authenticated else None
+        from django.contrib.auth.models import User
+
+        # Generate a unique video_id
+        video_id = str(uuid.uuid4())  # Generate a UUID
         caption = request.POST.get('caption')
-        video_id = request.POST.get('video_id')
         video_file = request.FILES.get('video_file')
-        if not (user and caption and video_id and video_file):
-            return JsonResponse({'error': 'Missing user, caption, video_id, or file'}, status=400)
-        # Save the uploaded video file
+        user = User.objects.first()  # Replace with actual user logic
+
+        if not caption or not video_file:
+            return JsonResponse({'error': 'Missing caption or file'}, status=400)
+
+        # Save the video file to the "videos" directory
         video_path = os.path.join(settings.BASE_DIR, 'videos', f'{video_id}.mp4')
-        try:
-            with open(video_path, 'wb+') as destination:
-                for chunk in video_file.chunks():
-                    destination.write(chunk)
-        except Exception as e:
-            return JsonResponse({'error': f'Error saving file: {str(e)}'}, status=500)
-        # Set the video_url for playback
-        video_url = f'/api/videopost/?video_id={video_id}'
-        VideoPost.objects.create(user=user, caption=caption, video_url=video_url)
+        with open(video_path, 'wb') as f:
+            for chunk in video_file.chunks():
+                f.write(chunk)
+
+        # Create a new VideoPost
+        VideoPost.objects.create(
+            user=user,
+            caption=caption,
+            video_url=f'/api/videopost/?video_id={video_id}',
+            video_id=video_id  # Use the unique video_id
+        )
+
+        # Debugging: Log the details of the newly created post
+        print(f"New VideoPost created: video_id={video_id}, caption={caption}, user={user}")
+
         return JsonResponse({'message': 'Post created successfully'}, status=201)
     else:
-        return render(request, 'index.html', {'user_id': request.user.id if request.user.is_authenticated else None})
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
