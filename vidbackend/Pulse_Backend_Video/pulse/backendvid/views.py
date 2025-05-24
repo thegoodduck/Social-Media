@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse, FileResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.db import models
 from .models import VideoWatch, VideoPost  # Replace with your actual model
 import os
@@ -146,3 +147,27 @@ def feed(request):
     posts = VideoPost.objects.filter(id__in=video_ids)
 
     return render(request, 'index.html', {'posts': posts, 'user_id': user_id})
+
+@csrf_exempt
+def create_post(request):
+    if request.method == 'POST':
+        user = request.user if request.user.is_authenticated else None
+        caption = request.POST.get('caption')
+        video_id = request.POST.get('video_id')
+        video_file = request.FILES.get('video_file')
+        if not (user and caption and video_id and video_file):
+            return JsonResponse({'error': 'Missing user, caption, video_id, or file'}, status=400)
+        # Save the uploaded video file
+        video_path = os.path.join(settings.BASE_DIR, 'videos', f'{video_id}.mp4')
+        try:
+            with open(video_path, 'wb+') as destination:
+                for chunk in video_file.chunks():
+                    destination.write(chunk)
+        except Exception as e:
+            return JsonResponse({'error': f'Error saving file: {str(e)}'}, status=500)
+        # Set the video_url for playback
+        video_url = f'/api/videopost/?video_id={video_id}'
+        VideoPost.objects.create(user=user, caption=caption, video_url=video_url)
+        return JsonResponse({'message': 'Post created successfully'}, status=201)
+    else:
+        return render(request, 'index.html', {'user_id': request.user.id if request.user.is_authenticated else None})

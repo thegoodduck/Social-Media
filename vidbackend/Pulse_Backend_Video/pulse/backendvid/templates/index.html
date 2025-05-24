@@ -40,6 +40,23 @@
 
     <!-- Feed -->
     <section class="col-span-2 md:col-span-1 space-y-4">
+      <!-- Post creation form -->
+      <form method="post" action="/api/create-post/" class="mb-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl shadow" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="block text-sm font-medium mb-1">Caption</label>
+          <input type="text" name="caption" class="w-full p-2 rounded border" required>
+        </div>
+        <div class="mb-2">
+          <label class="block text-sm font-medium mb-1">Video ID (filename without .mp4)</label>
+          <input type="text" name="video_id" class="w-full p-2 rounded border" required>
+        </div>
+        <div class="mb-2">
+          <label class="block text-sm font-medium mb-1">Video File (.mp4)</label>
+          <input type="file" name="video_file" accept="video/mp4" class="w-full p-2 rounded border" required>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Create Post</button>
+      </form>
       {% for post in posts %}
       <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow">
         <div class="flex items-center gap-3 mb-2">
