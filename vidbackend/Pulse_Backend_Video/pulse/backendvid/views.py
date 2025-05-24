@@ -124,6 +124,25 @@ def video_feed(request):
     return JsonResponse({'feed': [v['video_id'] for v in recommended]}, status=200)
 
 def feed(request):
-    # Fetch latest posts, adjust model/fields as needed
-    posts = VideoPost.objects.order_by('-created_at')[:20]
-    return render(request, 'index.html', {'posts': posts})
+    user_id = request.GET.get('user_id') or request.session.session_key
+    if not user_id:
+        # Ensure session exists for anonymous users
+        request.session.save()
+        user_id = request.session.session_key
+
+    # Get IDs of videos the user has already watched
+    watched_videos = VideoWatch.objects.filter(user_id=user_id).values_list('video_id', flat=True)
+
+    # Recommend videos not yet watched, ordered by popularity (number of watches)
+    recommended = (
+        VideoWatch.objects
+        .exclude(video_id__in=watched_videos)
+        .values('video_id')
+        .annotate(watch_count=models.Count('id'))
+        .order_by('-watch_count')[:10]
+    )
+    # Get VideoPost objects for recommended video_ids
+    video_ids = [v['video_id'] for v in recommended]
+    posts = VideoPost.objects.filter(id__in=video_ids)
+
+    return render(request, 'index.html', {'posts': posts, 'user_id': user_id})
