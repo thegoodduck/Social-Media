@@ -10,28 +10,27 @@
 <body>
   <div id="app" class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header>
-      <h1>𝓢𝔂𝓷𝓬</h1>
-      <div class="user-section">
-        <i class="fas fa-search search-icon" @click.stop="toggleSearch" style="cursor: pointer; z-index: 10;"></i>
-        <transition name="fade">
-          <div v-if="searchVisible" class="search-dropdown">
-            <input v-model="searchQuery" type="text" placeholder="Search posts or videos...">
-          </div>
-        </transition>
-        <div class="relative">
-           <img src="https://latestnewsandaffairs.site/public/pfp3.jpg" alt="User Avatar" class="hover-scale" @click.stop="toggleProfileMenu" style="cursor: pointer;">
-          <transition name="fade">
-            <div v-if="showProfileMenu" class="profile-menu glassmorphism">
-              <p class="name">{{ userProfile.name }}</p>
-              <p class="email">{{ userProfile.email }}</p>
-              <button @click="logout">Logout</button>
-            </div>
-          </transition>
-        </div>
+<header>
+  <h1>𝓢𝔂𝓷𝓬</h1>
+  <div class="user-section">
+    <i class="fas fa-search search-icon" @click="toggleSearch"></i>
+    <transition name="fade">
+      <div v-if="searchVisible" class="search-dropdown">
+        <input v-model="searchQuery" type="text" placeholder="Search posts or videos...">
       </div>
-    </header>
-
+    </transition>
+    <div class="relative">
+      <img src="https://latestnewsandaffairs.site/public/pfp3.jpg" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu">
+      <transition name="fade">
+        <div v-if="showProfileMenu" class="profile-menu">
+          <p class="name">{{ userProfile.name }}</p>
+          <p class="email">{{ userProfile.email }}</p>
+          <button @click="logout">Logout</button>
+        </div>
+      </transition>
+    </div>
+  </div>
+</header>
     <!-- Main Content -->
     <main>
       <!-- Posts Section -->
@@ -194,18 +193,18 @@
     </main>
 
     <!-- Navbar -->
-    <nav class="glassmorphism">
+<nav class="glassmorphism">
       <ul>
-        <li :class="{ active: currentTab === 'posts' }" @click="currentTab = 'posts'">
+        <li :class="{ active: currentTab === 'posts' }" @click="switchTab('posts')">
           <i class="fas fa-home"></i>
         </li>
-        <li :class="{ active: currentTab === 'videos' }" @click="currentTab = 'videos'">
+        <li :class="{ active: currentTab === 'videos' }" @click="switchTab('videos')">
           <i class="fas fa-video"></i>
         </li>
-        <li :class="{ active: currentTab === 'messages' }" @click="currentTab = 'messages'">
+        <li :class="{ active: currentTab === 'chat' }" @click="switchTab('chat')">
           <i class="fas fa-comment"></i>
         </li>
-        <li :class="{ active: currentTab === 'settings' }" @click="currentTab = 'settings'">
+        <li :class="{ active: currentTab === 'settings' }" @click="switchTab('settings')">
           <i class="fas fa-cog"></i>
         </li>
       </ul>
@@ -257,535 +256,514 @@
       .comment-input-container button { background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 25px; transition: background-color 0.3s ease; cursor: pointer; font-size: 14px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); }
       .close-comments-btn { position: absolute; top: 10px; right: 10px; background-color: #ff4c4c; color: white; border: none; padding: 5px 10px; border-radius: 20px; cursor: pointer; }
     `;
-
-    const { createApp, reactive, computed, onMounted, onUnmounted } = Vue;
-
-    createApp({
-      setup() {
-          // Current date and time
-        const currentDateTime = '11:25 AM IST, Sunday, May 25, 2025';
-        // Reactive state
-        const state = reactive({
-          posts: [],
-          currentPage: 1,
-          loading: false,
-          hasMorePosts: true,
-          sortOption: 'most-liked',
-          postText: '',
-          imagePreview: null,
-          lastSentPostId: null,
-          loggedInUsername: localStorage.getItem('username') || 'Unknown',
-          sessionId: sessionStorage.getItem('sessionId'),
-          currentTab: 'posts',
-          searchVisible: false,
-          searchQuery: '',
-          showProfileMenu: false,
-          userProfile: {
-            name: 'John Doe',
-            email: 'john.doe@example.com',
-            avatar: 'https://via.placeholder.com/32'
-          },
-          videos: [
-            { id: 1, title: 'Cool Video', description: 'A cool video description', thumbnail: 'https://via.placeholder.com/300x200', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }
-          ],
-          messages: [
-            { id: 1, text: 'Hello!', isUser: false },
-            { id: 2, text: 'Hi there!', isUser: true }
-          ],
-          settings: {
-            darkMode: false,
-            notifications: true
-          },
-          newComment: '',
-          newMessage: '',
-          showVideoModal: false,
-          selectedVideo: {}
-        });
-
-        // Computed properties
-        const filteredPosts = computed(() => {
-          return state.posts.filter(post =>
-            (post.message || '').toLowerCase().includes(state.searchQuery.toLowerCase())
-          );
-        });
-
-        const filteredVideos = computed(() => {
-          return state.videos.filter(video =>
-            video.title.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-            video.description.toLowerCase().includes(state.searchQuery.toLowerCase())
-          );
-        });
-
-        // Methods
-        function getPostHeaderHtml(post) {
-          return `
-            <div class="post-header">
-              <div class="profile-picture" onclick="showUserProfile('${post.username.replace(/'/g, "\\'")}', '${post.profilePicture || 'pfp2.jpg'}')">
-                <img src="${post.profilePicture || 'pfp2.jpg'}" alt="${post.username.replace(/'/g, "\\'")}\'s profile picture" />
-              </div>
-              <div class="username">
-                <strong>${post.username.replace(/'/g, "\\'")}</strong>
-              </div>
-            </div>
-          `;
+Vue.createApp({
+  data() {
+    return {
+      posts: [],
+      currentPage: 1,
+      loading: false,
+      hasMorePosts: true,
+      sortOption: 'most-liked',
+      postText: '',
+      imagePreview: null,
+      lastSentPostId: null,
+      loggedInUsername: localStorage.getItem('username') || 'Unknown',
+      sessionId: sessionStorage.getItem('sessionId'),
+      currentTab: 'posts',
+      searchVisible: false,
+      searchQuery: '',
+      showProfileMenu: false,
+      userProfile: {
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        avatar: 'https://via.placeholder.com/32'
+      },
+      videos: [
+        {
+          id: 1,
+          title: 'Cool Video',
+          description: 'A cool video description',
+          thumbnail: 'https://via.placeholder.com/300x200',
+          url: 'https://www.w3schools.com/html/mov_bbb.mp4'
         }
+      ],
+      messages: [
+        { id: 1, text: 'Hello!', isUser: false },
+        { id: 2, text: 'Hi there!', isUser: true }
+      ],
+      settings: {
+        darkMode: false,
+        notifications: true
+      },
+      newComment: '',
+      newMessage: '',
+      showVideoModal: false,
+      selectedVideo: {}
+    };
+  },
 
-        function getCommentHtml(postId, comment) {
-          const replies = Array.isArray(comment.replies) ? comment.replies : [];
-          const timeAgo = getTimeAgo(new Date(comment.timestamp));
-          const commentUsername = comment.username || 'Unknown';
-          const commentProfilePicture = comment.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg';
+  computed: {
+    filteredPosts() {
+      return this.posts.filter(post =>
+        (post.message || '').toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    },
+    filteredVideos() {
+      return this.videos.filter(video =>
+        video.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        video.description.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+  },
 
-          let repliesHtml = replies.length > 0
-            ? replies.map(reply => {
-                const validReplyId = reply.replyId || '';
-                return validReplyId ? `
-                  <div class="reply" id="reply-${validReplyId}">
-                    <div class="reply-profile">
-                      <img src="${reply.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'}" alt="${(reply.username || 'Unknown').replace(/'/g, "\\'")}\'s profile" />
-                    </div>
-                    <div class="reply-content">
-                      <div class="reply-header">
-                        <span class="reply-username">${(reply.username || 'Unknown').replace(/'/g, "\\'")}</span>
-                        <span class="reply-timestamp">${getTimeAgo(new Date(reply.timestamp))}</span>
-                      </div>
-                      <p class="reply-text">${(reply.reply || 'No reply').replace(/'/g, "\\'")}</p>
-                    </div>
-                    <button class="like-reply-btn" onclick="likeReply('${postId}', '${comment.commentId}', '${validReplyId}')">
-                      ❤️ <span class="like-count">${reply.hearts || 0}</span>
-                    </button>
+  methods: {
+    getPostHeaderHtml(post) {
+      return `
+        <div class="post-header">
+          <div class="profile-picture" onclick="showUserProfile('${post.username.replace(/'/g, "\\'")}', '${post.profilePicture || 'pfp2.jpg'}')">
+            <img src="${post.profilePicture || 'pfp2.jpg'}" alt="${post.username.replace(/'/g, "\\'")}\'s profile picture" />
+          </div>
+          <div class="username">
+            <strong>${post.username.replace(/'/g, "\\'")}</strong>
+          </div>
+        </div>
+      `;
+    },
+
+    getCommentHtml(postId, comment) {
+      const replies = Array.isArray(comment.replies) ? comment.replies : [];
+      const timeAgo = this.getTimeAgo(new Date(comment.timestamp));
+      const commentUsername = comment.username || 'Unknown';
+      const commentProfilePicture = comment.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg';
+
+      let repliesHtml = replies.length > 0
+        ? replies.map(reply => {
+            const validReplyId = reply.replyId || '';
+            return validReplyId ? `
+              <div class="reply" id="reply-${validReplyId}">
+                <div class="reply-profile">
+                  <img src="${reply.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'}" alt="${(reply.username || 'Unknown').replace(/'/g, "\\'")}\'s profile" />
+                </div>
+                <div class="reply-content">
+                  <div class="reply-header">
+                    <span class="reply-username">${(reply.username || 'Unknown').replace(/'/g, "\\'")}</span>
+                    <span class="reply-timestamp">${this.getTimeAgo(new Date(reply.timestamp))}</span>
                   </div>
-                ` : '';
-              }).join('')
-            : '<p>No replies yet</p>';
+                  <p class="reply-text">${(reply.reply || 'No reply').replace(/'/g, "\\'")}</p>
+                </div>
+                <button class="like-reply-btn" onclick="likeReply('${postId}', '${comment.commentId}', '${validReplyId}')">
+                  ❤️ <span class="like-count">${reply.hearts || 0}</span>
+                </button>
+              </div>
+            ` : '';
+          }).join('')
+        : '<p>No replies yet</p>';
 
-          return `
-            <div id="comment-${comment.commentId}" class="comment-inner">
-              <div class="comment-profile">
-                <img src="${commentProfilePicture}" alt="${commentUsername.replace(/'/g, "\\'")}\'s profile" />
-              </div>
-              <div class="comment-content">
-                <div class="comment-header">
-                  <span class="comment-username">${commentUsername.replace(/'/g, "\\'")}</span>
-                  <span class="comment-timestamp">${timeAgo}</span>
-                </div>
-                <div class="comment-text">${(comment.comment || 'No comment').replace(/'/g, "\\'")}</div>
-                <div class="comment-actions">
-                  <button class="like-comment-btn" onclick="likeComment('${postId}', '${comment.commentId}', '${commentUsername.replace(/'/g, "\\'")}')">
-                    ❤️ <span class="like-count">${comment.hearts || 0}</span>
-                  </button>
-                  <button class="reply-btn" onclick="toggleReplies('${postId}', '${comment.commentId}', '${commentUsername.replace(/'/g, "\\'")}')">
-                    💬 ${replies.length > 0 ? `(${replies.length})` : ''}
-                  </button>
-                  ${comment.username === state.loggedInUsername || state.sessionId === comment.sessionId ? `
-                    <button class="delete-comment-btn" onclick="deleteComment('${postId}', '${comment.commentId}')">
-                      🗑️ Delete
-                    </button>
-                  ` : ''}
-                </div>
-                <div class="replies" style="display: ${comment.showReplies ? 'block' : 'none'};">
-                  ${repliesHtml}
-                </div>
-              </div>
+      return `
+        <div id="comment-${comment.commentId}" class="comment-inner">
+          <div class="comment-profile">
+            <img src="${commentProfilePicture}" alt="${commentUsername.replace(/'/g, "\\'")}\'s profile" />
+          </div>
+          <div class="comment-content">
+            <div class="comment-header">
+              <span class="comment-username">${commentUsername.replace(/'/g, "\\'")}</span>
+              <span class="comment-timestamp">${timeAgo}</span>
             </div>
-          `;
-        }
+            <div class="comment-text">${(comment.comment || 'No comment').replace(/'/g, "\\'")}</div>
+            <div class="comment-actions">
+              <button class="like-comment-btn" onclick="likeComment('${postId}', '${comment.commentId}', '${commentUsername.replace(/'/g, "\\'")}')">
+                ❤️ <span class="like-count">${comment.hearts || 0}</span>
+              </button>
+              <button class="reply-btn" onclick="toggleReplies('${postId}', '${comment.commentId}', '${commentUsername.replace(/'/g, "\\'")}')">
+                💬 ${replies.length > 0 ? `(${replies.length})` : ''}
+              </button>
+              ${comment.username === this.loggedInUsername || this.sessionId === comment.sessionId ? `
+                <button class="delete-comment-btn" onclick="deleteComment('${postId}', '${comment.commentId}')">
+                  🗑️ Delete
+                </button>
+              ` : ''}
+            </div>
+            <div class="replies" style="display: ${comment.showReplies ? 'block' : 'none'};">
+              ${repliesHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    },
 
-        async function fetchPosts(page = 1, sort = 'newest') {
-          try {
-            const response = await fetch(
-              `https://sports321.vercel.app/api/posts?page=${page}&limit=16&sort=${sort}`
-            );
-            if (!response.ok) throw new Error('Failed to load posts');
-            return await response.json();
-          } catch (error) {
-            console.error('Error fetching posts:', error);
-            return { posts: [], hasMorePosts: false };
-          }
-        }
-
-        function showLoading() {
-          state.loading = true;
-        }
-
-        function hideLoading() {
-          state.loading = false;
-        }
-
-        async function loadMorePosts() {
-          if (state.loading || !state.hasMorePosts) return;
-          showLoading();
-          const newPosts = await fetchPosts(state.currentPage, state.sortOption);
-          if (newPosts && newPosts.posts.length > 0) {
-            newPosts.posts.forEach(post => {
-              post.showComments = false;
-              post.commentInput = '';
-              post.comments = post.comments || [];
-              post.likes = post.likes || 0;
-              post.dislikes = post.dislikes || 0;
-              post.views = post.views || 0;
-              post.comments.forEach(comment => {
-                comment.showReplies = false;
-                comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
-              });
-              state.posts.push(post);
-            });
-            state.currentPage++;
-            state.hasMorePosts = newPosts.hasMorePosts;
-          } else {
-            state.hasMorePosts = false;
-          }
-          hideLoading();
-        }
-
-        function sortPosts(sortBy) {
-          state.sortOption = sortBy;
-          state.posts = [];
-          state.currentPage = 1;
-          state.hasMorePosts = true;
-          loadMorePosts();
-        }
-
-        async function postOpinion() {
-          if (!state.sessionId || !state.loggedInUsername) {
-            showNotification('Error: Session ID and Username are required', true);
-            return;
-          }
-          const submitBtn = document.getElementById('submitBtn');
-          const imageInput = document.getElementById('file-input');
-          let imageData = null;
-          if (imageInput.files.length > 0) {
-            const file = imageInput.files[0];
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-              try {
-                imageData = await blobToBase64(await resizeImageToMaxSize(reader.result, 65));
-                await submitPost(state.postText.trim(), imageData);
-              } catch (error) {
-                showNotification('Error processing image.', true);
-              }
-            };
-            reader.readAsDataURL(file);
-          } else {
-            await submitPost(state.postText.trim(), null);
-          }
-        }
-
-        async function submitPost(postText, imageData) {
-          if (!postText && !imageData) {
-            showNotification('Post content cannot be empty!', true);
-            return;
-          }
-          const submitBtn = document.getElementById('submitBtn');
-          submitBtn.classList.add('button-clicked');
-          try {
-            const postData = {
-              message: postText,
-              username: state.loggedInUsername,
-              sessionId: state.sessionId,
-              photo: imageData,
-            };
-            const response = await fetch('https://sports321.vercel.app/api/postOpinion', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-              body: JSON.stringify(postData),
-              credentials: 'include',
-            });
-            if (!response.ok) {
-              showNotification('Error: Failed to submit post', true);
-              return;
-            }
-            const newPost = await response.json();
-            state.lastSentPostId = newPost._id;
-            newPost.showComments = false;
-            newPost.commentInput = '';
-            newPost.comments = newPost.comments || [];
-            newPost.likes = newPost.likes || 0;
-            newPost.dislikes = newPost.dislikes || 0;
-            newPost.views = newPost.views || 0;
-            newPost.comments.forEach(comment => {
-              comment.showReplies = false;
-              comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
-            });
-            state.posts.unshift(newPost);
-            showNotification('Post submitted successfully!', false);
-            const pushNotificationResponse = await fetch(
-              'https://2damnit.vercel.app/api/notifications',
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'send-push-notification' }),
-              }
-            );
-            if (!pushNotificationResponse.ok) {
-              console.error('Error sending push notification.');
-            }
-          } catch (error) {
-            showNotification('Error submitting post: ' + error.message, true);
-          } finally {
-            submitBtn.classList.remove('button-clicked');
-            resetForm();
-          }
-        }
-
-        function resetForm() {
-          state.postText = '';
-          state.imagePreview = null;
-          const imageInput = document.getElementById('file-input');
-          if (imageInput) imageInput.value = '';
-        }
-
-        function resizeImageToMaxSize(imageSrc, maxSizeKB = 65) {
-          return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.src = imageSrc;
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              const maxWidth = 200;
-              const scale = maxWidth / img.width;
-              canvas.width = img.width * scale;
-              canvas.height = img.height * scale;
-              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-              canvas.toBlob(
-                blob => {
-                  if (blob.size / 1024 <= maxSizeKB) {
-                    resolve(blob);
-                  } else {
-                    reject('Image exceeds max size after resizing.');
-                  }
-                },
-                'image/webp',
-                0.4
-              );
-            };
-            img.onerror = () => reject('Error loading image.');
-          });
-        }
-
-        function blobToBase64(blob) {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        }
-
-        function handleImageUpload(event) {
-          const file = event.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-              state.imagePreview = e.target.result;
-            };
-            reader.readAsDataURL(file);
-          }
-        }
-
-        window.showUserProfile = function (username, profilePicture) {
-          window.location.href = `search2.html?username=${encodeURIComponent(username)}`;
-        };
-
-        function formatTimestamp(timestamp) {
-          const date = new Date(timestamp);
-          if (isNaN(date)) {
-            console.error('Invalid timestamp', timestamp);
-            return 'Invalid Date';
-          }
-          const options = { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
-          return date.toLocaleString('en-GB', options);
-        }
-
-        function getTimeAgo(date) {
-          const now = new Date();
-          const diffInSeconds = Math.floor((now - date) / 1000);
-          const years = Math.floor(diffInSeconds / (60 * 60 * 24 * 365));
-          const days = Math.floor(diffInSeconds / (60 * 60 * 24));
-          const hours = Math.floor(diffInSeconds / (60 * 60));
-          const minutes = Math.floor(diffInSeconds / 60);
-          if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
-          if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-          if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-          if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-          return 'Just now';
-        }
-
-        window.likePost = function (postId) {
-          const post = state.posts.find(p => p._id === postId);
-          if (post) post.likes++;
-        };
-
-        window.dislikePost = function (postId) {
-          const post = state.posts.find(p => p._id === postId);
-          if (post) post.dislikes++;
-        };
-
-        function toggleComments(postId) {
-          const post = state.posts.find(p => p._id === postId);
-          if (post) post.showComments = !post.showComments;
-        }
-
-        function closeComments(postId) {
-          const post = state.posts.find(p => p._id === postId);
-          if (post) post.showComments = false;
-        }
-
-        function addComment(postId) {
-          const post = state.posts.find(p => p._id === postId);
-          if (post && post.commentInput.trim()) {
-            post.comments.push({
-              commentId: `temp-${Date.now()}`,
-              username: state.loggedInUsername,
-              comment: post.commentInput,
-              timestamp: new Date().toISOString(),
-              hearts: 0,
-              replies: [],
-              showReplies: false,
-            });
-            post.commentInput = '';
-          }
-        }
-
-        window.likeComment = function (postId, commentId, username) {
-          console.log(`Liking comment ${commentId} on post ${postId} by ${username}`);
-        };
-
-        window.toggleReplies = function (postId, commentId, username) {
-          const post = state.posts.find(p => p._id === postId);
-          if (post) {
-            const comment = post.comments.find(c => c.commentId === commentId);
-            if (comment) comment.showReplies = !comment.showReplies;
-          }
-        };
-
-        window.likeReply = function (postId, commentId, replyId) {
-          console.log(`Liking reply ${replyId} on comment ${commentId} in post ${postId}`);
-        };
-
-        window.deleteComment = function (postId, commentId) {
-          console.log(`Deleting comment ${commentId} on post ${postId}`);
-        };
-
-        window.editPost = function (postId, username) {
-          console.log(`Editing post ${postId} by ${username}`);
-        };
-
-        window.deletePost = function (postId) {
-          console.log(`Deleting post ${postId}`);
-        };
-
-        function incrementViewOnScroll(postId) {
-          console.log(`Incrementing view for post ${postId}`);
-        }
-
-        function showNotification(message, isError) {
-          console.log(`${isError ? 'Error' : 'Success'}: ${message}`);
-        }
-
-        function handleScroll() {
-          if (
-            window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-            !state.loading &&
-            state.hasMorePosts
-          ) {
-            loadMorePosts();
-          }
-        }
-
-        function hoverComment(event) {
-          event.currentTarget.style.backgroundColor = '#333';
-          event.currentTarget.style.transform = 'scale(1.02)';
-        }
-
-        function leaveComment(event) {
-          event.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-          event.currentTarget.style.transform = 'scale(1)';
-        }
-
-        function toggleSearch() {
-          state.searchVisible = !state.searchVisible;
-        }
-
-        function toggleProfileMenu() {
-          state.showProfileMenu = !state.showProfileMenu;
-        }
-
-        function logout() {
-          console.log('User logged out');
-          state.showProfileMenu = false;
-        }
-
-        function sendMessage() {
-          if (state.newMessage.trim()) {
-            state.messages.push({
-              id: state.messages.length + 1,
-              text: state.newMessage,
-              isUser: true
-            });
-            state.newMessage = '';
-          }
-        }
-         function openVideoModal(video) {
-          state.selectedVideo = video;
-          state.showVideoModal = true;
-        }
-
-        function toggleDarkMode() {
-          document.body.classList.toggle('dark', state.settings.darkMode);
-        }
-
-        function saveSettings() {
-          console.log('Settings saved:', state.settings);
-        }
-        function switchTab(tab) {
-  state.currentTab = tab;
-}
-        // Lifecycle hooks
-        onMounted(() => {
-          loadMorePosts();
-          window.addEventListener('scroll', handleScroll);
-          const style = document.createElement('style');
-          style.textContent = `
-            ${postHeaderCss}
-            ${commentCss}
-            ${commentsSectionCss}
-          `;
-          document.head.appendChild(style);
-        });
-
-        onUnmounted(() => {
-          window.removeEventListener('scroll', handleScroll);
-        });
-
-        // Return reactive state and methods
-return {
-  ...state,
-  currentDateTime,
-  filteredPosts,
-  filteredVideos,
-  getPostHeaderHtml,
-  getCommentHtml,
-  sortPosts,
-  postOpinion,
-  handleImageUpload,
-  formatTimestamp,
-  toggleComments,
-  closeComments,
-  addComment,
-  hoverComment,
-  leaveComment,
-  toggleSearch,
-  toggleProfileMenu,
-  logout,
-  sendMessage,
-  openVideoModal,
-  toggleDarkMode,
-  saveSettings,
-  switchTab // Add this
-};
+    async fetchPosts(page = 1, sort = 'newest') {
+      try {
+        const response = await fetch(
+          `https://sports321.vercel.app/api/posts?page=${page}&limit=16&sort=${sort}`
+        );
+        if (!response.ok) throw new Error('Failed to load posts');
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        return { posts: [], hasMorePosts: false };
       }
-    }).mount('#app');
+    },
+
+    showLoading() {
+      this.loading = true;
+    },
+
+    hideLoading() {
+      this.loading = false;
+    },
+
+    async loadMorePosts() {
+      if (this.loading || !this.hasMorePosts) return;
+      this.showLoading();
+      const newPosts = await this.fetchPosts(this.currentPage, this.sortOption);
+      if (newPosts && newPosts.posts.length > 0) {
+        newPosts.posts.forEach(post => {
+          post.showComments = false;
+          post.commentInput = '';
+          post.comments = post.comments || [];
+          post.likes = post.likes || 0;
+          post.dislikes = post.dislikes || 0;
+          post.views = post.views || 0;
+          post.comments.forEach(comment => {
+            comment.showReplies = false;
+            comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
+          });
+          this.posts.push(post);
+        });
+        this.currentPage++;
+        this.hasMorePosts = newPosts.hasMorePosts;
+      } else {
+        this.hasMorePosts = false;
+      }
+      this.hideLoading();
+    },
+
+    sortPosts(sortBy) {
+      this.sortOption = sortBy;
+      this.posts = [];
+      this.currentPage = 1;
+      this.hasMorePosts = true;
+      this.loadMorePosts();
+    },
+
+    async postOpinion() {
+      if (!this.sessionId || !this.loggedInUsername) {
+        this.showNotification('Error: Session ID and Username are required', true);
+        return;
+      }
+      const submitBtn = document.getElementById('submitBtn');
+      const imageInput = document.getElementById('file-input');
+      let imageData = null;
+      if (imageInput.files.length > 0) {
+        const file = imageInput.files[0];
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          try {
+            imageData = await this.blobToBase64(await this.resizeImageToMaxSize(reader.result, 65));
+            await this.submitPost(this.postText.trim(), imageData);
+          } catch (error) {
+            this.showNotification('Error processing image.', true);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        await this.submitPost(this.postText.trim(), null);
+      }
+    },
+
+    async submitPost(postText, imageData) {
+      if (!postText && !imageData) {
+        this.showNotification('Post content cannot be empty!', true);
+        return;
+      }
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.classList.add('button-clicked');
+      try {
+        const postData = {
+          message: postText,
+          username: this.loggedInUsername,
+          sessionId: this.sessionId,
+          photo: imageData,
+        };
+        const response = await fetch('https://sports321.vercel.app/api/postOpinion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(postData),
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          this.showNotification('Error: Failed to submit post', true);
+          return;
+        }
+        const newPost = await response.json();
+        this.lastSentPostId = newPost._id;
+        newPost.showComments = false;
+        newPost.commentInput = '';
+        newPost.comments = newPost.comments || [];
+        newPost.likes = newPost.likes || 0;
+        newPost.dislikes = newPost.dislikes || 0;
+        newPost.views = newPost.views || 0;
+        newPost.comments.forEach(comment => {
+          comment.showReplies = false;
+          comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
+        });
+        this.posts.unshift(newPost);
+        this.showNotification('Post submitted successfully!', false);
+        const pushNotificationResponse = await fetch(
+          'https://2damnit.vercel.app/api/notifications',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'send-push-notification' }),
+          }
+        );
+        if (!pushNotificationResponse.ok) {
+          console.error('Error sending push notification.');
+        }
+      } catch (error) {
+        this.showNotification('Error submitting post: ' + error.message, true);
+      } finally {
+        submitBtn.classList.remove('button-clicked');
+        this.resetForm();
+      }
+    },
+
+    resetForm() {
+      this.postText = '';
+      this.imagePreview = null;
+      const imageInput = document.getElementById('file-input');
+      if (imageInput) imageInput.value = '';
+    },
+
+    resizeImageToMaxSize(imageSrc, maxSizeKB = 65) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = imageSrc;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const maxWidth = 200;
+          const scale = maxWidth / img.width;
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            blob => {
+              if (blob.size / 1024 <= maxSizeKB) {
+                resolve(blob);
+              } else {
+                reject('Image exceeds max size after resizing.');
+              }
+            },
+            'image/webp',
+            0.4
+          );
+        };
+        img.onerror = () => reject('Error loading image.');
+      });
+    },
+
+    blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    },
+
+    handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          this.imagePreview = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+
+    formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      if (isNaN(date)) {
+        console.error('Invalid timestamp', timestamp);
+        return 'Invalid Date';
+      }
+      const options = { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
+      return date.toLocaleString('en-GB', options);
+    },
+
+    getTimeAgo(date) {
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - date) / 1000);
+      const years = Math.floor(diffInSeconds / (60 * 60 * 24 * 365));
+      const days = Math.floor(diffInSeconds / (60 * 60 * 24));
+      const hours = Math.floor(diffInSeconds / (60 * 60));
+      const minutes = Math.floor(diffInSeconds / 60);
+      if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
+      if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+      if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+      return 'Just now';
+    },
+
+    toggleComments(postId) {
+      const post = this.posts.find(p => p._id === postId);
+      if (post) post.showComments = !post.showComments;
+    },
+
+    closeComments(postId) {
+      const post = this.posts.find(p => p._id === postId);
+      if (post) post.showComments = false;
+    },
+
+    addComment(postId) {
+      const post = this.posts.find(p => p._id === postId);
+      if (post && post.commentInput.trim()) {
+        post.comments.push({
+          commentId: `temp-${Date.now()}`,
+          username: this.loggedInUsername,
+          comment: post.commentInput,
+          timestamp: new Date().toISOString(),
+          hearts: 0,
+          replies: [],
+          showReplies: false,
+        });
+        post.commentInput = '';
+      }
+    },
+
+    hoverComment(event) {
+      event.currentTarget.style.backgroundColor = '#333';
+      event.currentTarget.style.transform = 'scale(1.02)';
+    },
+
+    leaveComment(event) {
+      event.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+      event.currentTarget.style.transform = 'scale(1)';
+    },
+
+    switchTab(tab) {
+      this.currentTab = tab;
+      this.searchVisible = false;
+      this.showProfileMenu = false;
+    },
+
+    toggleSearch() {
+      this.searchVisible = !this.searchVisible;
+      this.showProfileMenu = false;
+      if (this.searchVisible) {
+        this.$nextTick(() => {
+          const searchInput = document.querySelector('.search-dropdown input');
+          if (searchInput) searchInput.focus();
+        });
+      }
+    },
+
+    toggleProfileMenu() {
+      this.showProfileMenu = !this.showProfileMenu;
+      this.searchVisible = false;
+    },
+
+    logout() {
+      console.log('User logged out');
+      this.showProfileMenu = false;
+    },
+
+    sendMessage() {
+      if (this.newMessage.trim()) {
+        this.messages.push({
+          id: this.messages.length + 1,
+          text: this.newMessage,
+          isUser: true
+        });
+        this.newMessage = '';
+      }
+    },
+
+    openVideoModal(video) {
+      this.selectedVideo = video;
+      this.showVideoModal = true;
+    },
+
+    toggleDarkMode() {
+      document.body.classList.toggle('dark', this.settings.darkMode);
+    },
+
+    saveSettings() {
+      console.log('Settings saved:', this.settings);
+    },
+
+    showNotification(message, isError) {
+      console.log(`${isError ? 'Error' : 'Success'}: ${message}`);
+    },
+
+    handleScroll() {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
+        !this.loading &&
+        this.hasMorePosts
+      ) {
+        this.loadMorePosts();
+      }
+    }
+  },
+
+  created() {
+    this.loadMorePosts();
+    const style = document.createElement('style');
+    style.textContent = `
+      ${postHeaderCss}
+      ${commentCss}
+      ${commentsSectionCss}
+    `;
+    document.head.appendChild(style);
+  },
+
+  mounted() {
+    window.addEventListener('scroll', this.handleScroll);
+  },
+
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.handleScroll);
+  },
+
+  beforeCreate() {
+    window.showUserProfile = (username, profilePicture) => {
+      window.location.href = `search2.html?username=${encodeURIComponent(username)}`;
+    };
+    window.likePost = (postId) => {
+      const post = this.posts.find(p => p._id === postId);
+      if (post) post.likes++;
+    };
+    window.dislikePost = (postId) => {
+      const post = this.posts.find(p => p._id === postId);
+      if (post) post.dislikes++;
+    };
+    window.likeComment = (postId, commentId, username) => {
+      console.log(`Liking comment ${commentId} on post ${postId} by ${username}`);
+    };
+    window.toggleReplies = (postId, commentId, username) => {
+      const post = this.posts.find(p => p._id === postId);
+      if (post) {
+        const comment = post.comments.find(c => c.commentId === commentId);
+        if (comment) comment.showReplies = !comment.showReplies;
+      }
+    };
+    window.likeReply = (postId, commentId, replyId) => {
+      console.log(`Liking reply ${replyId} on comment ${commentId} in post ${postId}`);
+    };
+    window.deleteComment = (postId, commentId) => {
+      console.log(`Deleting comment ${commentId} on post ${postId}`);
+    };
+    window.editPost = (postId, username) => {
+      console.log(`Editing post ${postId} by ${username}`);
+    };
+    window.deletePost = (postId) => {
+      console.log(`Deleting post ${postId}`);
+    };
+  }
+}).mount('#app');
   </script>
     <style>
 /* General Styles */
