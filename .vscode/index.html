@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Social Media App</title>
+  <title> 𝓢𝔂𝓷𝓬 @</title>
  <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -11,16 +11,16 @@
   <div id="app" class="min-h-screen flex flex-col">
     <!-- Header -->
 <header>
-  <h1>𝓢𝔂𝓷𝓬</h1>
-  <div class="user-section">
-    <i class="fas fa-search search-icon" @click="toggleSearch"></i>
+  <h1 style="font-size: 23px; margin-left:5%">𝓢𝔂𝓷𝓬</h1>
+  <div class="user-section" style="gap: 12px; display: flex;">
+    <i class="fas fa-search search-icon" @click="toggleSearch" style="  font-size: 25px;color: #5eead4;margin-right: 15%;cursor: pointer; margin-top:5px" ></i>
     <transition name="fade">
       <div v-if="searchVisible" class="search-dropdown">
         <input v-model="searchQuery" type="text" placeholder="Search posts or videos...">
       </div>
     </transition>
     <div class="relative">
-      <img src="https://latestnewsandaffairs.site/public/pfp3.jpg" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu">
+      <img src="https://latestnewsandaffairs.site/public/pfp3.jpg" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu" style="width: 32px;height: 32px;border-radius: 50%;cursor: pointer;border: 2px solid #000;margin-right: 20px; /* or use % if needed */">
       <transition name="fade">
         <div v-if="showProfileMenu" class="profile-menu">
           <p class="name">{{ userProfile.name }}</p>
@@ -36,28 +36,10 @@
       <!-- Posts Section -->
       <section v-if="currentTab === 'posts'" class="posts-section">
         <!-- Sorting Buttons -->
-  <div id="sort-options">
-  <button
-    class="sort-button"
-    :class="{ active: sortOption === 'most-liked' }"
-    @click="sortPosts('most-liked')"
-  >
-    Most Liked
-  </button>
-  <button
-    class="sort-button"
-    :class="{ active: sortOption === 'most-comments' }"
-    @click="sortPosts('most-comments')"
-  >
-    Most Comments
-  </button>
-  <button
-    class="sort-button"
-    :class="{ active: sortOption === 'newest' }"
-    @click="sortPosts('newest')"
-  >
-    Newest
-  </button>
+  <div id="sort-options" style="gap:15%;">
+  <button class="sort-button" :class="{ active: sortOption === 'most-liked' }" @click="sortPosts('most-liked')">𝓖𝓮𝓷𝓮𝓻𝓪𝓵</button>
+  <button class="sort-button" :class="{ active: sortOption === 'most-comments' }" @click="sortPosts('most-comments')">𝓣𝓻𝓮𝓷𝓭𝓲𝓷𝓰</button>
+  <button class="sort-button" :class="{ active: sortOption === 'newest' }" @click="sortPosts('newest')" >𝓝𝓮𝔀𝓮𝓼𝓽</button>
 </div>
         <!-- Posts Feed -->
         <div v-for="post in filteredPosts" :key="post._id" class="post-card hover-scale" :data-id="post._id">
@@ -813,41 +795,6 @@ header {
   right: 0;
   z-index: 30;
 }
-header h1 {
-  font-size: 23px;
-  margin-left: 5%;
-  font-weight: 600;
-}
-header .user-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-header .user-section .search-icon {
-  font-size: 25px;
-  color: #5eead4;
-  margin-right: 15%;
-  cursor: pointer;
-}
-header .user-section .search-dropdown {
-  position: absolute;
-  top: 48px;
-  right: 50px;
-  width: 260px;
-  z-index: 10;
-}
-header .user-section .search-dropdown input,
-.post-card .comment-input,
-.chat-section input,
-.settings-section input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  font-size: 0.875rem;
-  outline: none;
-}
 header .user-section .search-dropdown input {
   border-radius: 9999px;
 }
@@ -858,41 +805,6 @@ header .user-section .search-dropdown input {
   border-color: #4b5563;
   background: #1f2937;
   color: #f3f4f6;
-}
-header .user-section img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid #000;
-  margin-right: 20px; /* or use % if needed */
-}
-
-header .profile-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 8px;
-  width: 224px;
-  padding: 16px;
-  background: #1f2937;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  z-index: 20;
-}
-header .profile-menu .name {
-  font-weight: 600;
-  color: #fff;
-}
-header .profile-menu .email {
-  font-size: 0.875rem;
-  color: #d1d5db;
-  margin: 0 0 8px;
-}
-header .profile-menu button {
-  background: none;
-  border: none;
-  cursor: pointer;
 }
 /* Navbar Styles */
 nav {
@@ -938,7 +850,7 @@ main {
 .post-card, .movie-card {
     font-size: 13px;
 linear-gradient(to bottom right, #111827, #581c87);
-    color: #e0e0e0; /* Light text color */
+    color: white; /* Light text color */
     padding: 14px;
     border-radius: 15px;
     margin: 0 0 15px 0; /* Remove left and right margin, keep bottom margin */
@@ -1029,7 +941,7 @@ linear-gradient(to bottom right, #111827, #581c87);
 }
 .post-card p,
 .video-card p {
-  color: #6b7280;
+  color: white;
   margin: 0 0 16px;
 }
 .dark .post-card p,
@@ -1245,6 +1157,16 @@ linear-gradient(to bottom right, #111827, #581c87);
   color: #fff;
   box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
   transform: translateY(0); /* No lift when active */
+}
+/* Timestamp Styling */
+.post-timestamp,
+.movie-timestamp {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+    text-align: right;
+    font-family: Arial, sans-serif;
+    line-height: 1.4;
 }
 </style>
 </body>
