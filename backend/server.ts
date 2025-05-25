@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import type { Request, Response } from 'express';
+import { registerUser, loginUser, getUserInfo } from './controller/user';
 dotenv.config();
 
 
@@ -14,10 +16,44 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the backend server!');
 });
 
+app.post('/api/register', async (req: Request, res: Response) => {
+  try {
+    const { username, email, password } = req.body;
+    const user = await registerUser({ username, email, password });
+    res.status(201).json({ user });
+  } catch (e: any) {
+    console.error("Erreur complète registerUser:", e, typeof e, JSON.stringify(e));
+    res.status(400).json({ error: e.message || e.toString() || "Erreur inconnue" });
+  }
+});
+
+app.post('/api/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const { token, user } = await loginUser({ email, password });
+    res.json({ token, user });
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+app.get('/api/user-info', (req, res) => {
+  (async () => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) return res.status(400).json({ error: 'userId requis' });
+      const user = await getUserInfo(userId);
+      res.json({ user });
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
+    }
+  })();
+});
+export default app;
 
 
 app.listen(PORT, () => {
