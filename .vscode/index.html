@@ -766,9 +766,20 @@ Vue.createApp({
 }).mount('#app');
   </script>
     <style>
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 /* General Styles */
 body {
-  margin: 0;
+      padding: 10px; /* Optional: Add padding to the body */
+    margin: 0;
+    font-family: Arial, sans-serif;
+        display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+      align-items: stretch;
   background: linear-gradient(to bottom right, #111827, #581c87);
   color: #1f2937;
 }
@@ -791,7 +802,7 @@ body.dark {
 header {
   background: linear-gradient(to bottom right, #111827, #581c87);
   color: #fff;
-  padding: 6px;
+  padding: 9px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -803,7 +814,7 @@ header {
   z-index: 30;
 }
 header h1 {
-  font-size: 20px;
+  font-size: 23px;
   margin-left: 5%;
   font-weight: 600;
 }
@@ -879,10 +890,6 @@ header .profile-menu .email {
   margin: 0 0 8px;
 }
 header .profile-menu button {
-  width: 100%;
-  text-align: left;
-  color: #f87171;
-  font-weight: 500;
   background: none;
   border: none;
   cursor: pointer;
@@ -921,9 +928,71 @@ main {
   flex: 1;
   margin: 60px 0;
 }
+/* Posts Feed Section */
+#posts {
+    margin-top: 4px;
+    padding: 0 0px; /* Add some internal padding to make sure posts don't touch edges */
+}
 
-/* Shared Card Styles */
-.post-card,
+/* Post & Movie Card Styling */
+.post-card, .movie-card {
+    font-size: 13px;
+linear-gradient(to bottom right, #111827, #581c87);
+    color: #e0e0e0; /* Light text color */
+    padding: 14px;
+    border-radius: 15px;
+    margin: 0 0 15px 0; /* Remove left and right margin, keep bottom margin */
+    width: 100%; /* Ensure the card takes the full width */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Card Line Separator */
+.post-card:not(:last-child),
+.movie-card:not(:last-child) {
+    border-bottom: 1px solid #ddd;
+}
+
+/* Card Actions */
+.post-card .actions,
+.movie-card .actions {
+    display: flex;
+    justify-content: flex-start; /* Align to the left, won't push buttons down */
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.post-card button,
+.movie-card button {
+    background-color: transparent;
+    border: 1px solid #ff6f61; /* Stylish border */
+    color: #ff1100;
+    cursor: pointer;
+    font-size: 10px; /* Reduced font size for smaller buttons */
+    padding: 4px 8px; /* Reduced padding for compact buttons */
+    border-radius: 5px; /* Rounded corners */
+    min-width: 50px; /* Prevent buttons from becoming too small */
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 600px) {
+    .post-card .actions,
+    .movie-card .actions {
+        justify-content: flex-start;
+    }
+
+    .post-card button,
+    .movie-card button {
+        font-size: 9px;
+        padding: 3px 6px;
+        min-width: 40px;
+    }
+}
+
 .video-card,
 .chat-section,
 .settings-section {
@@ -966,30 +1035,6 @@ main {
 .dark .post-card p,
 .dark .video-card p {
   color: #d1d5db;
-}
-
-/* Posts Section */
-.posts-section {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 8px;
-}
-.post-card .actions {
-  display: flex;
-  gap: 16px;
-}
-.post-card .actions button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-}
-.post-card .actions .like-btn {
-  color: #14b8a6;
 }
 .post-card .actions .comment-btn {
   color: #6b7280;
@@ -1164,36 +1209,43 @@ main {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-   #sort-options {
-        display: flex;
-        justify-content: space-between; /* Distribute buttons with space between */
-        margin-bottom: 20px;
-        padding-left: 8%; /* 8% gap at the start */
-        padding-right: 8%; /* 8% gap at the end */
-    }
+ /* Sort Options Styles */
+#sort-options {
+  display: flex;
+  justify-content: center; /* Center buttons */
+  gap: 10px; /* Reduced gap for compactness */
+  margin: 15px auto; /* Slightly smaller margin */
+  padding: 0 3%; /* Tighter padding */
+  max-width: 800px; /* More compact max-width */
+}
 
-    .sort-button {
-        padding: 5px 15px; /* Adjusted padding for better button size */
-        border: 2px solid #ccc;
-        border-radius: 12px; /* Rounded border corners for a softer look */
-        background-color: #000;
-        color: white; /* Set text color to white */
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    }
+.sort-button {
+  padding: 6px 12px; /* Smaller padding for compact buttons */
+  border: 2px solid transparent; /* Base for animated border */
+  border-radius: 20px; /* Slightly smaller radius for compact look */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)); /* Subtle glassmorphism */
+  backdrop-filter: blur(6px); /* Lighter blur for performance */
+  color: #fff; /* White text */
+  font-weight: 500; /* Medium weight for modern look */
+  font-size: 14px; /* Smaller font size */
+  cursor: pointer;
+  transition: all 0.3s ease; /* Smooth transitions */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); /* Subtle shadow */
+  position: relative; /* For animated border */
+  overflow: hidden; /* Contain animated border */
+}
+.sort-button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+  transform: translateY(-1px); /* Subtle lift */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
 
-    .sort-button:hover {
-        background-color: #f0f0f0;
-        border-color: #bbb; /* Slightly darker border when hovered */
-    }
-
-    .sort-button.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3); /* Light shadow for active state */
-    }
+.sort-button.active {
+  background: linear-gradient(135deg, #007bff, #0056b3); /* Active gradient */
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  transform: translateY(0); /* No lift when active */
+}
 </style>
 </body>
 </html>
