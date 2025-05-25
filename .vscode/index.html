@@ -3,51 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>𝓥𝓾𝓮</title>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
+  <title>Social Media App</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.37/dist/vue.global.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
 <body>
   <div id="app" class="min-h-screen flex flex-col">
     <!-- Header -->
     <header>
       <h1>𝓢𝔂𝓷𝓬</h1>
       <div class="user-section">
-  <i class="fas fa-search search-icon" @click="toggleSearch"></i>
-
-  <transition name="fade">
-    <div v-if="searchVisible" class="search-dropdown">
-      <input v-model="searchQuery" type="text" placeholder="Search posts or videos...">
-    </div>
-  </transition>
-
-  <div class="relative">
-    <img :src="userProfile.avatar" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu">
-    <transition name="fade">
-      <div v-if="showProfileMenu" class="profile-menu glassmorphism">
-        <p class="name">{{ userProfile.name }}</p>
-        <p class="email">{{ userProfile.email }}</p>
-        <button @click="logout">Logout</button>
+        <i class="fas fa-search search-icon" @click="toggleSearch"></i>
+        <transition name="fade">
+          <div v-if="searchVisible" class="search-dropdown">
+            <input v-model="searchQuery" type="text" placeholder="Search posts or videos...">
+          </div>
+        </transition>
+        <div class="relative">
+          <img :src="userProfile.avatar" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu">
+          <transition name="fade">
+            <div v-if="showProfileMenu" class="profile-menu glassmorphism">
+              <p class="name">{{ userProfile.name }}</p>
+              <p class="email">{{ userProfile.email }}</p>
+              <button @click="logout">Logout</button>
+            </div>
+          </transition>
+        </div>
       </div>
-    </transition>
-  </div>
-</div>
     </header>
-
-    <!-- Navbar -->
-    <nav class="glassmorphism">
-      <ul>
-        <li v-for="tab in tabs" :key="tab" :class="{ active: currentTab === tab }" @click="currentTab = tab">
-          {{ tab }}
-        </li>
-      </ul>
-    </nav>
 
     <!-- Main Content -->
     <main>
       <!-- Posts Section -->
-      <section v-if="currentTab === 'Posts'" class="posts-section">
+      <section v-if="currentTab === 'posts'" class="posts-section">
         <div v-for="post in filteredPosts" :key="post.id" class="post-card hover-scale">
           <h2>{{ post.title }}</h2>
           <p>{{ post.content }}</p>
@@ -67,7 +55,7 @@
       </section>
 
       <!-- Videos Section -->
-      <section v-if="currentTab === 'Videos'" class="videos-section">
+      <section v-if="currentTab === 'videos'" class="videos-section">
         <div v-for="video in filteredVideos" :key="video.id" class="video-card hover-scale" @click="openVideoModal(video)">
           <img :src="video.thumbnail" alt="Video Thumbnail">
           <div class="content">
@@ -75,7 +63,6 @@
             <p>{{ video.description }}</p>
           </div>
         </div>
-        <!-- Video Modal -->
         <transition name="fade">
           <div v-if="showVideoModal" class="video-modal">
             <div class="modal-content">
@@ -90,8 +77,8 @@
       </section>
 
       <!-- Chat Section -->
-      <section v-if="currentTab === 'Chat'" class="chat-section">
-        <h2>User Chat</h2>
+      <section v-if="currentTab === 'chat'" class="chat-section">
+        <h2>Dummy Chat</h2>
         <div class="chat-window">
           <div v-for="message in messages" :key="message.id" class="message" :class="{ user: message.isUser }">
             <span class="chat-bubble">{{ message.text }}</span>
@@ -104,7 +91,7 @@
       </section>
 
       <!-- Settings Section -->
-      <section v-if="currentTab === 'Settings'" class="settings-section">
+      <section v-if="currentTab === 'settings'" class="settings-section">
         <h2>Settings</h2>
         <div class="options">
           <div class="option">
@@ -126,40 +113,50 @@
       </section>
     </main>
 
-    <!-- Footer -->
-    <footer>
-      <p>© 2025 SocialSync. All rights reserved.</p>
-    </footer>
+    <!-- Navbar -->
+    <nav class="glassmorphism">
+      <ul>
+        <li :class="{ active: currentTab === 'posts' }" @click="currentTab = 'posts'">
+          <i class="fas fa-home"></i>
+        </li>
+        <li :class="{ active: currentTab === 'videos' }" @click="currentTab = 'videos'">
+          <i class="fas fa-video"></i>
+        </li>
+        <li :class="{ active: currentTab === 'chat' }" @click="currentTab = 'chat'">
+          <i class="fas fa-comment"></i>
+        </li>
+        <li :class="{ active: currentTab === 'settings' }" @click="currentTab = 'settings'">
+          <i class="fas fa-cog"></i>
+        </li>
+      </ul>
+    </nav>
   </div>
 
-  <script>
+    <script>
     const { createApp } = Vue;
 
     createApp({
       data() {
         return {
-          tabs: ['Posts', 'Videos', 'Chat', 'Settings'],
-          currentTab: 'Posts',
+          currentTab: 'posts',
           searchVisible: false,
           searchQuery: '',
-          isSyncing: false,
+          showProfileMenu: false,
           userProfile: {
             name: 'John Doe',
-            email: 'john@example.com',
-            avatar: 'https://latestnewsandaffairs.site/public/pfp3.jpg'
+            email: 'john.doe@example.com',
+            avatar: 'https://via.placeholder.com/32'
           },
-          showProfileMenu: false,
           posts: [
-            { id: 1, title: 'First Post', content: 'Welcome to SocialSync!', likes: 10, comments: [], showComments: false },
-            { id: 2, title: 'Tech News', content: 'Latest AI advancements.', likes: 5, comments: [], showComments: false }
+            { id: 1, title: 'First Post', content: 'This is my first post!', likes: 0, comments: [], showComments: false },
+            { id: 2, title: 'Second Post', content: 'Loving this app!', likes: 0, comments: [], showComments: false }
           ],
           videos: [
-            { id: 1, title: 'Intro Video', description: 'Welcome to our platform', thumbnail: 'https://latestnewsandaffairs.site/public/pfp2.jpg', url: 'https://www.w3schools.com/html/mov_bbb.mp4' },
-            { id: 2, title: 'Tutorial', description: 'Learn the basics', thumbnail: 'https://latestnewsandaffairs.site/public/pfp3.jpg', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }
+            { id: 1, title: 'Cool Video', description: 'A cool video description', thumbnail: 'https://via.placeholder.com/300x200', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }
           ],
           messages: [
-            { id: 1, text: 'Hey, welcome!', isUser: false },
-            { id: 2, text: 'Thanks! Excited to be here.', isUser: true }
+            { id: 1, text: 'Hello!', isUser: false },
+            { id: 2, text: 'Hi there!', isUser: true }
           ],
           settings: {
             darkMode: false,
@@ -173,54 +170,54 @@
       },
       computed: {
         filteredPosts() {
-          return this.posts.filter(post => 
-            post.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+          return this.posts.filter(post =>
+            post.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
             post.content.toLowerCase().includes(this.searchQuery.toLowerCase())
           );
         },
         filteredVideos() {
-          return this.videos.filter(video => 
-            video.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+          return this.videos.filter(video =>
+            video.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
             video.description.toLowerCase().includes(this.searchQuery.toLowerCase())
           );
         }
       },
       methods: {
+        toggleSearch() {
+          this.searchVisible = !this.searchVisible;
+        },
         toggleProfileMenu() {
           this.showProfileMenu = !this.showProfileMenu;
         },
         logout() {
-          alert('Logged out!');
+          console.log('User logged out');
           this.showProfileMenu = false;
         },
         likePost(postId) {
           const post = this.posts.find(p => p.id === postId);
-          post.likes++;
-          this.triggerSync();
+          if (post) post.likes++;
         },
-        toggleSearch() {
-  this.searchVisible = !this.searchVisible;
-},
         toggleComments(postId) {
           const post = this.posts.find(p => p.id === postId);
-          post.showComments = !post.showComments;
+          if (post) post.showComments = !post.showComments;
         },
         addComment(postId) {
           if (this.newComment.trim()) {
             const post = this.posts.find(p => p.id === postId);
-            post.comments.push({ id: post.comments.length + 1, text: this.newComment });
-            this.newComment = '';
-            this.triggerSync();
+            if (post) {
+              post.comments.push({ id: post.comments.length + 1, text: this.newComment });
+              this.newComment = '';
+            }
           }
         },
         sendMessage() {
           if (this.newMessage.trim()) {
-            this.messages.push({ id: this.messages.length + 1, text: this.newMessage, isUser: true });
+            this.messages.push({
+              id: this.messages.length + 1,
+              text: this.newMessage,
+              isUser: true
+            });
             this.newMessage = '';
-            setTimeout(() => {
-              this.messages.push({ id: this.messages.length + 1, text: 'Cool, nice to hear from you!', isUser: false });
-            }, 1000);
-            this.triggerSync();
           }
         },
         openVideoModal(video) {
@@ -228,99 +225,69 @@
           this.showVideoModal = true;
         },
         toggleDarkMode() {
-          document.documentElement.classList.toggle('dark', this.settings.darkMode);
-          this.triggerSync();
+          document.body.classList.toggle('dark', this.settings.darkMode);
         },
         saveSettings() {
-          alert('Settings saved!');
-          this.triggerSync();
-        },
-        triggerSync() {
-          this.isSyncing = true;
-          setTimeout(() => {
-            this.isSyncing = false;
-          }, 1500);
-        }
-      },
-      mounted() {
-        if (this.settings.darkMode) {
-          document.documentElement.classList.add('dark');
+          console.log('Settings saved:', this.settings);
         }
       }
     }).mount('#app');
   </script>
+  
   <style>
 /* General Styles */
 body {
+  margin: 0;
   background: linear-gradient(to bottom right, #111827, #581c87);
   color: #1f2937;
-  transition: background 0.5s ease, color 0.5s ease;
 }
 body.dark {
-  background: linear-gradient(to bottom right, #111827, #581c87);
   color: #f3f4f6;
 }
-    #app {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-    /* Animations */
-    .fade-enter-active, .fade-leave-active {
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    .fade-enter-from, .fade-leave-to {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    .sync-pulse {
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .hover-scale {
-      transition: transform 0.2s ease;
-    }
-    .hover-scale:hover {
-      transform: scale(1.02);
-    }
-    .chat-bubble {
-      max-width: 70%;
-      word-wrap: break-word;
-    }
-  /* Header Styles */
-    header {
-      background: linear-gradient(to bottom right, #111827, #581c87);
-      color: #ffffff;
-      padding: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      border-bottom: 2px solid #444;
-    }
-    header h1 {
-      font-size: 22px;
-      margin-left: 5%;
-      font-weight: 600;
-    }
-  header .user-section {
+/* Animations */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+/* Header Styles */
+header {
+  background: linear-gradient(to bottom right, #111827, #581c87);
+  color: #fff;
+  padding: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+}
+header h1 {
+  font-size: 20px;
+  margin-left: 5%;
+  font-weight: 600;
+}
+header .user-section {
   display: flex;
   align-items: center;
   gap: 12px;
-  position: relative;
 }
-
 header .user-section .search-icon {
   font-size: 25px;
   color: #5eead4;
   margin-right: 15%;
   cursor: pointer;
-  transition: color 0.2s ease;
 }
 header .user-section .search-dropdown {
   position: absolute;
@@ -329,476 +296,326 @@ header .user-section .search-dropdown {
   width: 260px;
   z-index: 10;
 }
-
-header .user-section .search-dropdown input {
+header .user-section .search-dropdown input,
+.post-card .comment-input,
+.chat-section input,
+.settings-section input {
   width: 100%;
-  padding: 10px;
-  border-radius: 9999px;
+  padding: 12px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
-  background: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: #fff;
   font-size: 0.875rem;
   outline: none;
 }
-
-header .user-section .search-dropdown input:focus {
-  border-color: #14b8a6;
-  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.5);
+header .user-section .search-dropdown input {
+  border-radius: 9999px;
 }
-
-.dark header .user-section .search-dropdown input {
+.dark header .user-section .search-dropdown input,
+.dark .post-card .comment-input,
+.dark .chat-section input,
+.dark .settings-section input {
   border-color: #4b5563;
   background: #1f2937;
   color: #f3f4f6;
 }
-    header .user-section img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      margin-right: 3%;
-      cursor: pointer;
-      border: 2px solid #000;
-    }
-    header .profile-menu {
-      position: absolute;
-      right: 0;
-      top: 100%;
-      margin-top: 8px;
-      width: 224px;
-      padding: 16px;
-      z-index: 20;
-    }
-    header .profile-menu p {
-      margin: 0 0 8px;
-    }
-    header .profile-menu .name {
-      font-weight: 600;
-      color: #ffffff;
-    }
-    header .profile-menu .email {
-      font-size: 0.875rem;
-      color: #d1d5db;
-    }
-    header .profile-menu button {
-      width: 100%;
-      text-align: left;
-      color: #f87171;
-      font-weight: 500;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-    header .profile-menu button:hover {
-      color: #ef4444;
-    }
+header .user-section img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 3%;
+  cursor: pointer;
+  border: 2px solid #000;
+}
+header .profile-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 8px;
+  width: 224px;
+  padding: 16px;
+  background: #1f2937;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+}
+header .profile-menu .name {
+  font-weight: 600;
+  color: #fff;
+}
+header .profile-menu .email {
+  font-size: 0.875rem;
+  color: #d1d5db;
+  margin: 0 0 8px;
+}
+header .profile-menu button {
+  width: 100%;
+  text-align: left;
+  color: #f87171;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
 
 /* Navbar Styles */
-    nav {
-      position: fixed;
-      top: 12%;
-      left: 0;
-      right: 0;
-      padding: 16px;
-      z-index: 10;
-     
-    }
-    nav ul {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-    nav li {
-      padding: 8px 16px;
-      border-radius: 9999px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-        color: #f3f4f6;
-      transition: background 0.2s ease, color 0.2s ease;
-    }
-  nav li.active {
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 7px;
+  background: linear-gradient(to bottom right, #111827, #581c87);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+nav ul {
+  display: flex;
+  justify-content: space-around;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+nav li {
+  padding: 12px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: #f3f4f6;
+  cursor: pointer;
+}
+nav li.active {
   background: #14b8a6;
-  color: #ffffff;
+  color: #fff;
 }
 
-nav li:hover:not(.active) {
-  background: linear-gradient(to bottom right, #1f2937, #6b21a8);
-  color: #ffffff;
+/* Main Content */
+main {
+  flex: 1;
+  margin: 60px 0;
 }
-    /* Main Content */
-    main {
-      flex: 1;
-      padding: 24px;
-      padding-top: 96px;
-    }
 
-    /* Posts Section */
-    .posts-section {
-      max-width: 768px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    .post-card {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .dark .post-card {
-      background: #1f2937;
-    }
-    .post-card h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 0 0 8px;
-    }
-    .dark .post-card h2 {
-      color: #f3f4f6;
-    }
-    .post-card p {
-      color: #6b7280;
-      margin: 0 0 16px;
-    }
-    .dark .post-card p {
-      color: #d1d5db;
-    }
-    .post-card .actions {
-      display: flex;
-      gap: 16px;
-    }
-    .post-card .actions button {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    
-    .post-card .actions .like-btn {
-      color: #14b8a6;
-    }
-    .post-card .actions .like-btn:hover {
-      color: #0d9488;
-    }
-    .post-card .actions .comment-btn {
-      color: #6b7280;
-    }
-    .post-card .actions .comment-btn:hover {
-      color: #4b5563;
-    }
-    .post-card .comments {
-      margin-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .post-card .comment {
-      background: #f3f4f6;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-    }
-    .dark .post-card .comment {
-      background: #374151;
-    }
-    .post-card .comment-input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      font-size: 0.875rem;
-      outline: none;
-    }
-    .post-card .comment-input:focus {
-      border-color: #14b8a6;
-      box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.5);
-    }
-    .dark .post-card .comment-input {
-      border-color: #4b5563;
-      background: #1f2937;
-      color: #f3f4f6;
-    }
+/* Shared Card Styles */
+.post-card,
+.video-card,
+.chat-section,
+.settings-section {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.dark .post-card,
+.dark .video-card,
+.dark .chat-section,
+.dark .settings-section {
+  background: #1f2937;
+}
+.post-card h2,
+.video-card h3,
+.chat-section h2,
+.settings-section h2,
+.video-modal h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.video-card h3 {
+  font-size: 1.125rem;
+  margin: 0 0 4px;
+}
+.dark .post-card h2,
+.dark .video-card h3,
+.dark .chat-section h2,
+.dark .settings-section h2,
+.dark .video-modal h2 {
+  color: #f3f4f6;
+}
+.post-card p,
+.video-card p {
+  color: #6b7280;
+  margin: 0 0 16px;
+}
+.dark .post-card p,
+.dark .video-card p {
+  color: #d1d5db;
+}
 
-    /* Videos Section */
-    .videos-section {
-      max-width: 1152px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-    }
-    .video-card {
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      cursor: pointer;
-    }
-    .dark .video-card {
-      background: #1f2937;
-    }
-    .video-card img {
-      width: 100%;
-      height: 224px;
-      object-fit: cover;
-    }
-    .video-card .content {
-      padding: 16px;
-    }
-    .video-card h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin: 0 0 4px;
-    }
-    .dark .video-card h3 {
-      color: #f3f4f6;
-    }
-    .video-card p {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin: 0;
-    }
-    .dark .video-card p {
-      color: #d1d5db;
-    }
-    .video-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-    }
-    .video-modal .modal-content {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      max-width: 768px;
-      width: 100%;
-    }
-    .dark .video-modal .modal-content {
-      background: #1f2937;
-    }
-    .video-modal h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 0 0 16px;
-    }
-    .dark .video-modal h2 {
-      color: #f3f4f6;
-    }
-    .video-modal video {
-      width: 100%;
-      height: 320px;
-      border-radius: 8px;
-    }
-    .video-modal button {
-      margin-top: 16px;
-      padding: 8px 24px;
-      background: #14b8a6;
-      color: #ffffff;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-    .video-modal button:hover {
-      background: #0d9488;
-    }
+/* Posts Section */
+.posts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px;
+}
+.post-card .actions {
+  display: flex;
+  gap: 16px;
+}
+.post-card .actions button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+.post-card .actions .like-btn {
+  color: #14b8a6;
+}
+.post-card .actions .comment-btn {
+  color: #6b7280;
+}
+.post-card .comments {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.post-card .comment,
+.chat-section .chat-window,
+.chat-section .message:not(.user) .chat-bubble {
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+.dark .post-card .comment,
+.dark .chat-section .chat-window,
+.dark .chat-section .message:not(.user) .chat-bubble {
+  background: #374151;
+}
 
-    /* Chat Section */
-    .chat-section {
-      max-width: 640px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .dark .chat-section {
-      background: #1f2937;
-    }
-    .chat-section h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 0 0 16px;
-    }
-    .dark .chat-section h2 {
-      color: #f3f4f6;
-    }
-    .chat-section .chat-window {
-      height: 384px;
-      overflow-y: auto;
-      margin-bottom: 16px;
-      padding: 16px;
-      background: #f3f4f6;
-      border-radius: 8px;
-    }
-    .dark .chat-section .chat-window {
-      background: #374151;
-    }
-    .chat-section .message {
-      display: flex;
-      margin-bottom: 12px;
-    }
-    .chat-section .message.user {
-      justify-content: flex-end;
-    }
-    .chat-section .message .chat-bubble {
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-    }
-    .chat-section .message.user .chat-bubble {
-      background: #14b8a6;
-      color: #ffffff;
-    }
-    .chat-section .message:not(.user) .chat-bubble {
-      background: #d1d5db;
-    }
-    .dark .chat-section .message:not(.user) .chat-bubble {
-      background: #4b5563;
-    }
-    .chat-section .input-container {
-      display: flex;
-    }
-    .chat-section input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 8px 0 0 8px;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      font-size: 0.875rem;
-      outline: none;
-    }
-    .chat-section input:focus {
-      border-color: #14b8a6;
-      box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.5);
-    }
-    .dark .chat-section input {
-      border-color: #4b5563;
-      background: #1f2937;
-      color: #f3f4f6;
-    }
-    .chat-section button {
-      padding: 12px 24px;
-      background: #14b8a6;
-      color: #ffffff;
-      border: none;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-    .chat-section button:hover {
-      background: #0d9488;
-    }
+/* Videos Section */
+.videos-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+.video-card {
+  overflow: hidden;
+  cursor: pointer;
+}
+.video-card img {
+  width: 100%;
+  height: 224px;
+  object-fit: cover;
+}
+.video-card .content {
+  padding: 16px;
+}
+.video-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+.video-modal .modal-content {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 768px;
+  width: 100%;
+}
+.dark .video-modal .modal-content {
+  background: #1f2937;
+}
+.video-modal video {
+  width: 100%;
+  height: 320px;
+  border-radius: 8px;
+}
+.video-modal button,
+.chat-section button,
+.settings-section button {
+  padding: 12px 24px;
+  background: #14b8a6;
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.chat-section button {
+  border-radius: 0 8px 8px 0;
+}
+.settings-section button {
+  width: 100%;
+}
 
-    /* Settings Section */
-    .settings-section {
-      max-width: 640px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .dark .settings-section {
-      background: #1f2937;
-    }
-    .settings-section h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin: 0 0 16px;
-    }
-    .dark .settings-section h2 {
-      color: #f3f4f6;
-    }
-    .settings-section .options {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    .settings-section .option {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .settings-section .option span {
-      font-weight: 500;
-    }
-    .dark .settings-section .option span {
-      color: #f3f4f6;
-    }
-    .settings-section .toggle {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      cursor: pointer;
-    }
-    .settings-section .toggle input {
-      display: none;
-    }
-    .settings-section .toggle .slider {
-      width: 44px;
-      height: 24px;
-      background: #d1d5db;
-      border-radius: 9999px;
-      transition: background 0.2s ease;
-    }
-    .settings-section .toggle input:checked + .slider {
-      background: #14b8a6;
-    }
-    .settings-section .toggle .slider::before {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background: #ffffff;
-      border-radius: 50%;
-      left: 2px;
-      top: 2px;
-      transition: transform 0.2s ease;
-    }
-    .settings-section .toggle input:checked + .slider::before {
-      transform: translateX(20px);
-    }
-    .settings-section button {
-      width: 100%;
-      padding: 12px 24px;
-      background: #14b8a6;
-      color: #ffffff;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-    .settings-section button:hover {
-      background: #0d9488;
-    }
+/* Chat Section */
+.chat-section .chat-window {
+  height: calc(100vh - 300px);
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.chat-section .message {
+  display: flex;
+  margin-bottom: 12px;
+}
+.chat-section .message.user {
+  justify-content: flex-end;
+}
+.chat-section .message .chat-bubble {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  max-width: 70%;
+}
+.chat-section .message.user .chat-bubble {
+  background: #14b8a6;
+  color: #fff;
+}
+.chat-section .input-container {
+  display: flex;
+}
 
-    /* Footer */
-    footer {
-      background: linear-gradient(135deg, #1e3a8a, #7e22ce);
-      color: #ffffff;
-      padding: 16px;
-      text-align: center;
-      font-size: 0.875rem;
-    }
-  </style>
+/* Settings Section */
+.settings-section .options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.settings-section .option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.settings-section .option span {
+  font-weight: 500;
+}
+.dark .settings-section .option span {
+  color: #f3f4f6;
+}
+.settings-section .toggle .slider {
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+.settings-section .toggle input:checked + .slider {
+  background: #14b8a6;
+}
+.settings-section .toggle .slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  left: 2px;
+  top: 2px;
+}
+.settings-section .toggle input:checked + .slider::before {
+  transform: translateX(20px);
+}
+</style>
 </body>
 </html>
