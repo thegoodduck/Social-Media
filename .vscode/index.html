@@ -20,7 +20,8 @@
           </div>
         </transition>
         <div class="relative">
-          <img :src="userProfile.avatar" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu">
+          <img src="https://latestnewsandaffairs.site/public/pfp3.jpg" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu">
+
           <transition name="fade">
             <div v-if="showProfileMenu" class="profile-menu glassmorphism">
               <p class="name">{{ userProfile.name }}</p>
@@ -131,8 +132,7 @@
       </ul>
     </nav>
   </div>
-
-    <script>
+      <script>
     const { createApp } = Vue;
 
     createApp({
@@ -152,7 +152,7 @@
             { id: 2, title: 'Second Post', content: 'Loving this app!', likes: 0, comments: [], showComments: false }
           ],
           videos: [
-            { id: 1, title: 'Cool Video', description: 'A cool video description', thumbnail: 'https://latestnewsandaffairs.site/public/pfp3.jpg', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }
+            { id: 1, title: 'Cool Video', description: 'A cool video description', thumbnail: 'https://via.placeholder.com/300x200', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }
           ],
           messages: [
             { id: 1, text: 'Hello!', isUser: false },
@@ -233,8 +233,7 @@
       }
     }).mount('#app');
   </script>
-  
-  <style>
+<style>
 /* General Styles */
 body {
   margin: 0;
@@ -257,8 +256,6 @@ body.dark {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
-
-/* Header Styles */
 header {
   background: linear-gradient(to bottom right, #111827, #581c87);
   color: #fff;
@@ -323,10 +320,11 @@ header .user-section img {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  margin-right: 3%;
   cursor: pointer;
   border: 2px solid #000;
+  margin-right: 20px; /* or use % if needed */
 }
+
 header .profile-menu {
   position: absolute;
   right: 0;
@@ -357,7 +355,6 @@ header .profile-menu button {
   border: none;
   cursor: pointer;
 }
-
 /* Navbar Styles */
 nav {
   position: fixed;
@@ -387,7 +384,6 @@ nav li.active {
   background: #14b8a6;
   color: #fff;
 }
-
 /* Main Content */
 main {
   flex: 1;
