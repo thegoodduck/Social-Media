@@ -152,27 +152,74 @@
       </section>
 
       <!-- Settings Section -->
-      <section v-if="currentTab === 'settings'" class="settings-section">
-        <h2>Settings</h2>
-        <div class="options">
-          <div class="option">
-            <span>Enable Dark Mode</span>
-            <label class="toggle">
-              <input type="checkbox" v-model="settings.darkMode" @change="toggleDarkMode">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="option">
-            <span>Enable Notifications</span>
-            <label class="toggle">
-              <input type="checkbox" v-model="settings.notifications">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <button @click="saveSettings">Save Settings</button>
+     <section v-if="currentTab === 'settings'" class="settings-section">
+  <h2>Settings</h2>
+  <div class="options">
+    <div class="option">
+      <span>Enable Dark Mode</span>
+      <label class="toggle">
+        <input type="checkbox" v-model="settings.darkMode" @change="toggleDarkMode" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="option">
+      <span>Enable Notifications</span>
+      <label class="toggle">
+        <input type="checkbox" v-model="settings.notifications" @change="toggleNotifications" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div>
+      <div class="section-subtitle">Manage Notifications</div>
+      <div class="manage-notifications-list">
+        <div :class="['option', { disabled: !settings.notifications }]">
+          <span>Messages</span>
+          <label class="toggle">
+            <input type="checkbox" v-model="settings.notificationsMessages" :disabled="!settings.notifications" @change="notificationSubtypeChanged('Messages', settings.notificationsMessages)" />
+            <span class="slider"></span>
+          </label>
         </div>
-      </section>
-    </main>
+        <div :class="['option', { disabled: !settings.notifications }]">
+          <span>Mentions</span>
+          <label class="toggle">
+            <input type="checkbox" v-model="settings.notificationsMentions" :disabled="!settings.notifications" @change="notificationSubtypeChanged('Mentions', settings.notificationsMentions)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div :class="['option', { disabled: !settings.notifications }]">
+          <span>Friend Requests</span>
+          <label class="toggle">
+            <input type="checkbox" v-model="settings.notificationsFriendRequests" :disabled="!settings.notifications" @change="notificationSubtypeChanged('Friend Requests', settings.notificationsFriendRequests)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-subtitle">Blocked Users</div>
+      <ul class="blocked-list" v-if="blockedUsers.length > 0">
+        <li v-for="(user, index) in blockedUsers" :key="user.id">
+          {{ user.name }}
+          <button class="unblock-btn" @click="unblockUser (index)">Unblock</button>
+        </li>
+      </ul>
+      <p v-else style="color:#999; font-style: italic;">No blocked users</p>
+    </div>
+    <div>
+      <div class="section-subtitle">Your Activity</div>
+      <div class="activity-list" v-if="activityLog.length > 0">
+        <div class="activity-item" v-for="(activity, index) in activityLog" :key="index">
+          {{ activity }}
+        </div>
+      </div>
+      <p v-else style="color:#999; font-style: italic;">No recent activity</p>
+    </div>
+    <button class="save-btn" @click="saveSettings">Save Settings</button>
+    <button class="logout-btn" @click="logout">Log Out</button>
+  </div>
+</section>
+
+ 
 
     <!-- Navbar -->
 <nav class="glassmorphism">
@@ -238,6 +285,7 @@
       .comment-input-container button { background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 25px; transition: background-color 0.3s ease; cursor: pointer; font-size: 14px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); }
       .close-comments-btn { position: absolute; top: 10px; right: 10px; background-color: #ff4c4c; color: white; border: none; padding: 5px 10px; border-radius: 20px; cursor: pointer; }
     `;
+    
 Vue.createApp({
   data() {
     return {
@@ -273,15 +321,69 @@ Vue.createApp({
         { id: 1, text: 'Hello!', isUser: false },
         { id: 2, text: 'Hi there!', isUser: true }
       ],
-      settings: {
-        darkMode: false,
-        notifications: true
+          currentTab: 'settings',
+          settings: {
+            darkMode: false,
+            notifications: true,
+            notificationsMessages: true,
+            notificationsMentions: false,
+            notificationsFriendRequests: true,
+          },
+          blockedUsers: [
+            { id: 1, name: 'John Doe' },
+            { id: 2, name: 'Jane Smith' },
+            { id: 3, name: 'Mike Johnson' }
+          ],
+          activityLog: [
+            'Liked a photo on 2024-06-01',
+            'Commented on Sarah’s post on 2024-05-30',
+            'Updated profile picture on 2024-05-28',
+            'Started following Alice on 2024-05-25'
+          ]
+        };
       },
+      methods: {
+        toggleDarkMode() {
+          if (this.settings.darkMode) {
+            document.body.style.backgroundColor = '#1e1e1e';
+            document.body.style.color = '#eee';
+          } else {
+            document.body.style.backgroundColor = '#f9f9f9';
+            document.body.style.color = '#333';
+          }
+          console.log('Dark Mode:', this.settings.darkMode ? 'ON' : 'OFF');
+        },
+        toggleNotifications() {
+          console.log('Notifications:', this.settings.notifications ? 'ENABLED' : 'DISABLED');
+          if (!this.settings.notifications) {
+            // Disable all sub notifications if main toggled off
+            this.settings.notificationsMessages = false;
+            this.settings.notificationsMentions = false;
+            this.settings.notificationsFriendRequests = false;
+          } else {
+            // If enabled, reset sub to defaults or keep user's previous state
+            if (!this.settings.notificationsMessages &&
+                !this.settings.notificationsMentions &&
+                !this.settings.notificationsFriendRequests) {
+              // If all off before, enable messages by default
+              this.settings.notificationsMessages = true;
+            }
+          }
+        },
+        notificationSubtypeChanged(type, state) {
+          console.log(`Notification subtype changed: ${type} = ${state ? 'ON' : 'OFF'}`);
+        },
+        saveSettings() {
+          alert('Settings saved successfully!');
+          // Ideally, here you would also persist settings to a backend or localStorage
+          console.log('Settings saved:', this.settings);
+        },
+        
       newComment: '',
       newMessage: '',
       showVideoModal: false,
       selectedVideo: {}
-    };
+    
   },
 
   computed: {
@@ -1063,60 +1165,100 @@ linear-gradient(to bottom right, #111827, #581c87);
 }
 
 /* Settings Section */
-.settings-section .options {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.settings-section {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-.settings-section .option {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+h2 {
+  color: lch(67.41% 42.19 182.36); /* Theme color */
 }
-.settings-section .option span {
-  font-weight: 500;
-}
-.dark .settings-section .option span {
-  color: #f3f4f6;
-}
-.settings-section .toggle .slider {
+/* Toggle Switch Styles */
+.toggle {
+  position: relative;
+  display: inline-block;
   width: 44px;
   height: 24px;
-  background: #d1d5db;
-  border-radius: 9999px;
+  margin-bottom: 15px; /* Added margin for spacing */
 }
-.settings-section .toggle input:checked + .slider {
-  background: #14b8a6;
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
-.settings-section .toggle .slider::before {
-  content: '';
+.slider{
   position: absolute;
-  width: 20px;
-  height: 20px;
-  background: #fff;
-  border-radius: 50%;
-  left: 2px;
-  top: 2px;
+  cursor: pointer;
+  top:0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: gray;
+  transition: 0.4s;
+  border-radius: 30px;
 }
-.settings-section .toggle input:checked + .slider::before {
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: lch(67.41% 42.19 182.36);
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #5a6665; /* Theme color */
+}
+input:checked + .slider:before {
   transform: translateX(20px);
 }
-    .loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+/* Button Styles */
+button {
+  padding: 10px 20px;
+  background-color: #14b8a6; /* Theme color */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 10px; /* Added margin for spacing */
 }
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 5px solid #f3f3f3; /* Light gray */
-    border-top: 5px solid #3498db; /* Blue */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  background-color: #0f9b8a; /* Darker shade on hover */
+  transform :  scale(1.05);
 }
-
+.unblock-btn {
+  background-color: #ff4c4c; /* Unblock button color */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 10px; /* Added margin for spacing */
+}
+.unblock-btn:hover {
+  background-color: #e63939; /* Darker shade on hover */
+  transform: scale(1.05);
+}
+/* Section Subtitle Styles */
+.section-subtitle {
+  font-weight: bold;
+  margin: 10px 0;
+  color: #14b8a6; /* Theme color */
+}
+/* Activity List Styles */
+.activity-list {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+.activity-list:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
