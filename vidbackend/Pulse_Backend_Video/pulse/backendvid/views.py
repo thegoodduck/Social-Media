@@ -18,7 +18,13 @@ def videopost(request):
         user_id = request.GET.get('user_id')  # Optional user identification
         
         # Use absolute path to the videos directory at the project root
-        video_path = os.path.join(settings.BASE_DIR, 'videos', f'{video_id}.mp4')
+        base_videos_path = os.path.join(settings.BASE_DIR, 'videos')
+        video_path = os.path.normpath(os.path.join(base_videos_path, f'{video_id}.mp4'))
+        
+        # Ensure the video_path is within the base_videos_path
+        if not video_path.startswith(base_videos_path):
+            return JsonResponse({'error': 'Invalid video path'}, status=400)
+        
         print(f"Looking for video at: {video_path}")
         
         if os.path.exists(video_path):
@@ -43,7 +49,13 @@ def upload_video(request):
         video_file = request.FILES.get('video_file')
         if video_id and video_file:
             # Use absolute path to the videos directory at the project root
-            video_path = os.path.join(settings.BASE_DIR, 'videos', f'{video_id}.mp4')
+            base_videos_path = os.path.join(settings.BASE_DIR, 'videos')
+            video_path = os.path.normpath(os.path.join(base_videos_path, f'{video_id}.mp4'))
+            
+            # Ensure the video_path is within the base_videos_path
+            if not video_path.startswith(base_videos_path):
+                return JsonResponse({'error': 'Invalid video path'}, status=400)
+            
             try:
                 with open(video_path, 'wb+') as destination:
                     for chunk in video_file.chunks():
