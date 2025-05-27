@@ -105,7 +105,9 @@ def track_video_watch(request):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Error logging watch: {str(e)}'}, status=500)
+            import logging
+            logging.error(f"Error logging watch: {str(e)}")
+            return JsonResponse({'error': 'An internal error has occurred'}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
