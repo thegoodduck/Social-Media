@@ -28,7 +28,9 @@ def videopost(request):
             try:
                 return FileResponse(open(video_path, 'rb'), content_type='video/mp4')
             except Exception as e:
-                return JsonResponse({'error': f'Error reading file: {str(e)}'}, status=500)
+                import logging
+                logging.error(f"Error reading file: {str(e)}")
+                return JsonResponse({'error': 'An internal error has occurred'}, status=500)
         else:
             return JsonResponse({'error': 'Video not found'}, status=404)
     else:
@@ -48,7 +50,9 @@ def upload_video(request):
                         destination.write(chunk)
                 return JsonResponse({'message': 'Video uploaded successfully'}, status=201)
             except Exception as e:
-                return JsonResponse({'error': f'Error saving file: {str(e)}'}, status=500)
+                import logging
+                logging.error(f"Error saving file: {str(e)}")
+                return JsonResponse({'error': 'An internal error has occurred'}, status=500)
         else:
             return JsonResponse({'error': 'Missing video ID or file'}, status=400)
     else:
@@ -79,7 +83,8 @@ def log_video_watch(request, video_id, user_id=None):
         print(f"Logged video watch: {video_id} by user: {user_id or 'anonymous'}")
         
     except Exception as e:
-        print(f"Error logging video watch: {str(e)}")
+        import logging
+        logging.error(f"Error logging video watch: {str(e)}")
 
 @csrf_exempt
 def track_video_watch(request):
