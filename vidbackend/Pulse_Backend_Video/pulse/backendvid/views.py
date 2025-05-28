@@ -129,13 +129,9 @@ def video_feed(request):
     if not user_id:
         return JsonResponse({'error': 'user_id is required'}, status=400)
 
-    # Get IDs of videos the user has already watched
-    watched_videos = VideoWatch.objects.filter(user_id=user_id).values_list('video_id', flat=True)
-
-    # Recommend videos not yet watched, ordered by popularity (number of watches)
+    # Recommend videos ordered by popularity (number of watches), regardless of watched status
     recommended = (
         VideoWatch.objects
-        .exclude(video_id__in=watched_videos)
         .values('video_id')
         .annotate(watch_count=models.Count('id'))
         .order_by('-watch_count')[:10]
@@ -151,13 +147,9 @@ def feed(request):
         request.session.save()
         user_id = request.session.session_key
 
-    # Get IDs of videos the user has already watched
-    watched_videos = VideoWatch.objects.filter(user_id=user_id).values_list('video_id', flat=True)
-
-    # Recommend videos not yet watched, ordered by popularity (number of watches)
+    # Recommend videos ordered by popularity (number of watches), regardless of watched status
     recommended = (
         VideoWatch.objects
-        .exclude(video_id__in=watched_videos)
         .values('video_id')
         .annotate(watch_count=models.Count('id'))
         .order_by('-watch_count')[:10]
@@ -166,27 +158,16 @@ def feed(request):
     # Ensure video_ids are strings and strip any whitespace
     video_ids = [str(v['video_id']).strip() for v in recommended]
 
-    # Normalize video_ids in VideoPost query
-    posts = VideoPost.objects.filter(video_id__in=video_ids).annotate(normalized_id=models.F('video_id'))
-    posts = posts.filter(normalized_id__in=video_ids)
-
-    # Include all posts in the feed, prioritizing recommended ones
-    if video_ids:
-        posts = VideoPost.objects.filter(video_id__in=video_ids).order_by('-id')
-    else:
-        posts = VideoPost.objects.all().order_by('-id')[:10]
+    # Get recommended posts first
+    recommended_posts = list(VideoPost.objects.filter(video_id__in=video_ids))
+    # Get all other posts not in recommended
+    other_posts = list(VideoPost.objects.exclude(video_id__in=video_ids))
+    # Combine: recommended first, then all others
+    posts = recommended_posts + other_posts
 
     # Debugging: Log video_ids fetched from VideoPost
     fetched_video_ids = list(VideoPost.objects.filter(video_id__in=video_ids).values_list('video_id', flat=True))
     print("Fetched VideoPost video_ids:", fetched_video_ids)
-
-    # Log missing VideoPost entries for recommended video_ids
-    missing_video_ids = [v for v in video_ids if not VideoPost.objects.filter(video_id=v).exists()]
-    if missing_video_ids:
-        print("Missing VideoPost entries for video_ids:", missing_video_ids)
-
-    print("Watched Videos:", list(watched_videos))
-    print("Recommended:", list(recommended))
     print("Posts being sent to template:", posts)  # Debugging line
 
     return render(request, 'index.html', {'posts': posts, 'user_id': user_id})
