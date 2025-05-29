@@ -74,9 +74,9 @@
         </div>
       </transition>
     </div>
-    <div id="loading" :style="{ display: loading ? 'flex' : 'none' }">
-      Loading...
-    </div>
+    <div id="loading" class="loading" v-if="loading">
+          <div class="spinner"></div>
+        </div>
   </section>
 </template>
 
@@ -115,64 +115,63 @@ export default {
         </div>
       `;
     },
-    getCommentHtml(postId, comment) {
-      const replies = Array.isArray(comment.replies) ? comment.replies : [];
-      const timeAgo = this.getTimeAgo(new Date(comment.timestamp));
-      const commentUsername = comment.username || 'Unknown';
-      const commentProfilePicture = comment.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg';
-      let repliesHtml = replies.length > 0
-        ? replies.map(reply => {
-            const validReplyId = reply.replyId || '';
-            return validReplyId ? `
-              <div class="reply" id="reply-${validReplyId}">
-                <div class="reply-profile">
-                  <img src="${reply.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'}" alt="${(reply.username || 'Unknown').replace(/'/g, "\\'")}\'s profile" />
-                </div>
-                <div class="reply-content">
-                  <div class="reply-header">
-                    <span class="reply-username">${(reply.username || 'Unknown').replace(/'/g, "\\'")}</span>
-                    <span class="reply-timestamp">${this.getTimeAgo(new Date(reply.timestamp))}</span>
-                  </div>
-                  <p class="reply-text">${(reply.reply || 'No reply').replace(/'/g, "\\'")}</p>
-                </div>
-                <button class="like-reply-btn" onclick="likeReply('${postId}', '${comment.commentId}', '${validReplyId}')">
-                  ❤️ <span class="like-count">${reply.hearts || 0}</span>
-                </button>
+getCommentHtml(postId, comment) {
+  const replies = Array.isArray(comment.replies) ? comment.replies : [];
+  const timeAgo = this.getTimeAgo(new Date(comment.timestamp));
+  const commentUsername = comment.username || 'Unknown';
+  const commentProfilePicture = comment.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg';
+
+  const repliesHtml = replies.length > 0
+    ? replies.map(reply => {
+        const replyUsername = reply.username || 'Unknown';
+        const replyId = reply.replyId || '';
+        if (!replyId) return '';
+        return `
+          <div class="reply" id="reply-${replyId}">
+            <div class="reply-profile">
+              <img src="${reply.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'}" alt="${replyUsername}'s profile" />
+            </div>
+            <div class="reply-content">
+              <div class="reply-header">
+                <span class="reply-username">${replyUsername}</span>
+                <span class="reply-timestamp">${this.getTimeAgo(new Date(reply.timestamp))}</span>
               </div>
-            ` : '';
-          }).join('')
-        : '<p>No replies yet</p>';
-      return `
-        <div id="comment-${comment.commentId}" class="comment-inner">
-          <div class="comment-profile">
-            <img src="${commentProfilePicture}" alt="${commentUsername.replace(/'/g, "\\'")}\'s profile" />
+              <p class="reply-text">${reply.reply || 'No reply'}</p>
+            </div>
+            <button class="like-reply-btn" @click="likeReply('${postId}', '${comment.commentId}', '${replyId}')">
+              ❤️ <span class="like-count">${reply.hearts || 0}</span>
+            </button>
           </div>
-          <div class="comment-content">
-            <div class="comment-header">
-              <span class="comment-username">${commentUsername.replace(/'/g, "\\'")}</span>
-              <span class="comment-timestamp">${timeAgo}</span>
-            </div>
-            <div class="comment-text">${(comment.comment || 'No comment').replace(/'/g, "\\'")}</div>
-            <div class="comment-actions">
-              <button class="like-comment-btn" onclick="likeComment('${postId}', '${comment.commentId}', '${commentUsername.replace(/'/g, "\\'")}')">
-                ❤️ <span class="like-count">${comment.hearts || 0}</span>
-              </button>
-              <button class="reply-btn" onclick="toggleReplies('${postId}', '${comment.commentId}', '${commentUsername.replace(/'/g, "\\'")}')">
-                💬 ${replies.length > 0 ? `(${replies.length})` : ''}
-              </button>
-              ${comment.username === this.loggedInUsername || this.sessionId === comment.sessionId ? `
-                <button class="delete-comment-btn" onclick="deleteComment('${postId}', '${comment.commentId}')">
-                  🗑️ Delete
-                </button>
-              ` : ''}
-            </div>
-            <div class="replies" style="display: ${comment.showReplies ? 'block' : 'none'};">
-              ${repliesHtml}
-            </div>
-          </div>
+        `;
+      }).join('')
+    : '<p>No replies yet</p>';
+
+  return `
+    <div id="comment-${comment.commentId}" class="comment-inner">
+      <div class="comment-profile">
+        <img src="${commentProfilePicture}" alt="${commentUsername}'s profile" />
+      </div>
+      <div class="comment-content">
+        <div class="comment-header">
+          <span class="comment-username">${commentUsername}</span>
+          <span class="comment-timestamp">${timeAgo}</span>
         </div>
-      `;
-    },
+        <div class="comment-text">${comment.comment || 'No comment'}</div>
+        <div class="comment-actions">
+          <button class="like-comment-btn">❤️ <span class="like-count">${comment.hearts || 0}</span></button>
+          <button class="reply-btn">💬 ${replies.length > 0 ? `(${replies.length})` : ''}</button>
+          ${comment.username === this.loggedInUsername || this.sessionId === comment.sessionId ? `
+            <button class="delete-comment-btn">🗑️ Delete</button>
+          ` : ''}
+        </div>
+        <div class="replies" style="display: ${comment.showReplies ? 'block' : 'none'};">
+          ${repliesHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+,
     async fetchPosts(page = 1, sort = 'newest') {
       try {
         const response = await fetch(
@@ -492,14 +491,14 @@ export default {
   beforeDestroy() {
     window.removeEventListener('scroll', this.handleScroll);
   },
-  handleScroll() {
-    if (
-      window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-      !this.loading &&
-      this.hasMorePosts
-    ) {
-      this.loadMorePosts();
-    }
+handleScroll() {
+  if (
+    window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
+    !this.loading &&
+    this.hasMorePosts
+  ) {
+    this.loadMorePosts();
   }
+}
 };
 </script>
