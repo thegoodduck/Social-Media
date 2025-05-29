@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import type { Request, Response } from 'express';
 import { registerUser, loginUser, getUserInfo } from './controller/user';
+import rateLimit from 'express-rate-limit';
 dotenv.config();
 
 
@@ -31,7 +32,13 @@ app.post('/api/register', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/login', async (req: Request, res: Response) => {
+const loginRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // Limit each IP to 5 login requests per `window` (1 minute)
+  message: { error: "Too many login attempts. Please try again later." },
+});
+
+app.post('/api/login', loginRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const { token, user } = await loginUser({ email, password });
