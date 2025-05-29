@@ -143,33 +143,39 @@ def video_feed(request):
 def feed(request):
     user_id = request.GET.get('user_id') or request.session.session_key
     if not user_id:
-        # Ensure session exists for anonymous users
         request.session.save()
         user_id = request.session.session_key
 
-    # Recommend videos ordered by popularity (number of watches), regardless of watched status
-    recommended = (
+    # 1. Get watched and unwatched video_ids
+    watched_videos = set(VideoWatch.objects.filter(user_id=user_id).values_list('video_id', flat=True))
+    all_posts = list(VideoPost.objects.all())
+
+    # 2. Recommend unwatched videos first, ordered by popularity
+    unwatched_recommended = (
         VideoWatch.objects
+        .exclude(video_id__in=watched_videos)
         .values('video_id')
         .annotate(watch_count=models.Count('id'))
-        .order_by('-watch_count')[:10]
+        .order_by('-watch_count')
     )
+    unwatched_ids = [str(v['video_id']).strip() for v in unwatched_recommended]
+    unwatched_posts = [p for p in all_posts if p.video_id in unwatched_ids]
 
-    # Ensure video_ids are strings and strip any whitespace
-    video_ids = [str(v['video_id']).strip() for v in recommended]
+    # 3. Add any remaining unwatched posts not in recommended (new uploads, etc)
+    extra_unwatched_posts = [p for p in all_posts if (p.video_id not in watched_videos and p not in unwatched_posts)]
 
-    # Get recommended posts first
-    recommended_posts = list(VideoPost.objects.filter(video_id__in=video_ids))
-    # Get all other posts not in recommended
-    other_posts = list(VideoPost.objects.exclude(video_id__in=video_ids))
-    # Combine: recommended first, then all others
-    posts = recommended_posts + other_posts
+    # 4. Then show watched videos, ordered by most recently watched
+    recently_watched_ids = list(VideoWatch.objects.filter(user_id=user_id).order_by('-watched_at').values_list('video_id', flat=True))
+    watched_posts = [p for vid in recently_watched_ids for p in all_posts if p.video_id == vid]
 
-    # Debugging: Log video_ids fetched from VideoPost
-    fetched_video_ids = list(VideoPost.objects.filter(video_id__in=video_ids).values_list('video_id', flat=True))
-    print("Fetched VideoPost video_ids:", fetched_video_ids)
-    print("Posts being sent to template:", posts)  # Debugging line
+    # 5. Add any posts not yet included (guarantee all posts are shown eventually)
+    included_ids = set([p.video_id for p in unwatched_posts] + [p.video_id for p in extra_unwatched_posts] + [p.video_id for p in watched_posts])
+    missing_posts = [p for p in all_posts if p.video_id not in included_ids]
 
+    # 6. Final feed: addictive order
+    posts = unwatched_posts + extra_unwatched_posts + watched_posts + missing_posts
+
+    print("Feed order:", [p.video_id for p in posts])
     return render(request, 'index.html', {'posts': posts, 'user_id': user_id})
 
 @csrf_exempt
