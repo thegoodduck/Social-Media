@@ -12,11 +12,11 @@ body {
     flex-direction: column;
     justify-content: flex-start;
       align-items: stretch;
-  background: linear-gradient(to bottom right, #111827, #581c87);
-  color: #1f2937;
+  background-color: #000;
+  color: #fff;
 }
-body.dark {
-  background: #000;
+body .dark-mode {
+  background:linear-gradient(to bottom right,#111827,#581c87);;
   color: #ffffff; /* Optional: for better readability */
 }
 #app {
@@ -24,7 +24,6 @@ body.dark {
   display: flex;
   flex-direction: column;
 }
-
 /* Animations */
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -33,7 +32,7 @@ body.dark {
   opacity: 0;
 }
 header {
-  background: linear-gradient(to bottom right, #111827, #581c87);
+  background-color: #000;
   color: #fff;
   padding: 12px;
   display: flex;
@@ -45,17 +44,26 @@ header {
   left: 0;
   right: 0;
   z-index: 30;
-      border-bottom: 2px solid green;
+      border-bottom: 2px solid #e64a3c;
 }
 header .user-section .search-dropdown input {
   border-radius: 9999px;
 }
-.dark header .user-section .search-dropdown input,.dark header,body.dark nav,.dark 
-.dark .post-card .comment-input,
-.dark .chat-section input,
-.dark .settings-section input {
+.dark-mode header,
+.dark-mode body,
+.dark-mode nav,
+.dark-mode .user-section .search-dropdown input,
+.dark-mode .post-card .comment-input,
+.dark-mode .chat-section input,
+.dark-mode .settings-section input,
+.dark-mode .sidebar,
+.dark-mode .footer,
+.dark-mode .modal,
+.dark-mode .button,
+.dark-mode .card,
+.dark-mode .form-control {
   border-color: #4b5563;
-  background: #000;
+  background: linear-gradient(to bottom right, #111827, #581c87);
   color: #f3f4f6;
 }
 /* Navbar Styles */
@@ -65,7 +73,7 @@ nav {
   left: 0;
   right: 0;
   padding: 7px;
-  background: linear-gradient(to bottom right, #111827, #581c87);
+  background-color: #000;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
   z-index: 10;
 }
@@ -96,7 +104,7 @@ main {
 /* Post & Movie Card Styling */
 .post-card, .movie-card {
     font-size: 13px;
- background: linear-gradient(to bottom right, #111827, #581c87); /* Fixed */
+ background-color: #000; /* Fixed */
     color: white; /* Light text color */
     padding: 14px;
     border-radius: 15px;
@@ -105,13 +113,11 @@ main {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
 }
-
 /* Card Line Separator */
 .post-card:not(:last-child),
 .movie-card:not(:last-child) {
     border-bottom: 1px solid #ddd;
 }
-
 /* Card Actions */
 .post-card .actions,
 .movie-card .actions {
@@ -122,7 +128,6 @@ main {
     flex-wrap: wrap;
     align-items: center;
 }
-
 .post-card button,
 .movie-card button {
     background-color: transparent;
@@ -153,17 +158,26 @@ main {
 .video-card,
 .chat-section,
 .settings-section {
-  background: #fff;
+  background-color: #000;
+  color: #f3f4f6;
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-.dark .post-card,
-.dark .body,
-.dark .video-card,
-.dark .chat-section,
-.dark .settings-section {
-  background: #000;
+.dark-mode .post-card,
+.dark-mode .body,
+.dark-mode .video-card,
+.dark-mode .chat-section,
+.dark-mode .settings-section 
+{
+  background:linear-gradient(to bottom right,#111827,#581c87)
+}
+.dark-mode .post-card h2,
+.dark-mode .video-card h3,
+.dark-mode .chat-section h2,
+.dark-mode .settings-section h2,
+.dark-mode .video-modal h2 {
+  color: #fff;
 }
 .post-card h2,
 .video-card h3,
@@ -178,20 +192,13 @@ main {
   font-size: 1.125rem;
   margin: 0 0 4px;
 }
-.dark .post-card h2,
-.dark .video-card h3,
-.dark .chat-section h2,
-.dark .settings-section h2,
-.dark .video-modal h2 {
-  color: #f3f4f6;
-}
 .post-card p,
 .video-card p {
   color: white;
   margin: 0 0 16px;
 }
-.dark .post-card p,
-.dark .video-card p {
+.dark-mode .post-card p,
+.dark-mode .video-card p {
   color: #d1d5db;
 }
 .post-card .actions .comment-btn {
@@ -211,12 +218,11 @@ main {
   border-radius: 8px;
   font-size: 0.875rem;
 }
-.dark .post-card .comment,
-.dark .chat-section .chat-window,
-.dark .chat-section .message:not(.user) .chat-bubble {
-  background: #374151;
+.dark-mode .post-card .comment,
+.dark-mode .chat-section .chat-window,
+.dark-mode .chat-section .message:not(.user) .chat-bubble {
+   background:linear-gradient(to bottom right,#111827,#581c87);
 }
-
 /* Videos Section */
 .videos-section {
   display: grid;
@@ -255,25 +261,15 @@ main {
   max-width: 768px;
   width: 100%;
 }
-.dark .video-modal .modal-content {
-  background: #1f2937;
+.dark-mode .video-modal .modal-content {
+  background: #fff;
 }
 .video-modal video {
   width: 100%;
   height: 320px;
   border-radius: 8px;
 }
-.video-modal button,
-.chat-section button,
-.settings-section button {
-  padding: 12px 24px;
-  background: #14b8a6;
-  color: #fff;
-  border: none;
-  border-radius: 9999px;
-  cursor: pointer;
-  font-weight: 500;
-}
+
 .chat-section button {
   border-radius: 0 8px 8px 0;
 }
@@ -294,7 +290,7 @@ main {
 .settings-section .option span {
   font-weight: 500;
 }
-.dark .settings-section .option span {
+.dark-mode .settings-section .option span {
   color: #f3f4f6;
 }
 .settings-section .toggle .slider {
@@ -325,7 +321,6 @@ main {
     align-items: center;
     padding: 20px;
 }
-
 .spinner {
     width: 40px;
     height: 40px;
@@ -334,49 +329,10 @@ main {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
- /* Sort Options Styles */
-#sort-options {
-  display: flex;
-  justify-content: center; /* Center buttons */
-  gap: 10px; /* Reduced gap for compactness */
-  margin: 15px auto; /* Slightly smaller margin */
-  padding: 0 3%; /* Tighter padding */
-  max-width: 800px; /* More compact max-width */
-}
-
-.sort-button {
-  padding: 6px 12px; /* Smaller padding for compact buttons */
-  border: 2px solid transparent; /* Base for animated border */
-  border-radius: 20px; /* Slightly smaller radius for compact look */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)); /* Subtle glassmorphism */
-  backdrop-filter: blur(6px); /* Lighter blur for performance */
-  color: #fff; /* White text */
-  font-weight: 500; /* Medium weight for modern look */
-  font-size: 14px; /* Smaller font size */
-  cursor: pointer;
-  transition: all 0.3s ease; /* Smooth transitions */
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); /* Subtle shadow */
-  position: relative; /* For animated border */
-  overflow: hidden; /* Contain animated border */
-}
-.sort-button:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
-  transform: translateY(-1px); /* Subtle lift */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.sort-button.active {
-  background: linear-gradient(135deg, #007bff, #0056b3); /* Active gradient */
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
-  transform: translateY(0); /* No lift when active */
-}
-/* Timestamp Styling */
 .post-timestamp,
 .movie-timestamp {
     font-size: 12px;
@@ -409,7 +365,6 @@ button:hover {
     justify-content: space-between;
     gap: 12px;
 }
-
 .tabs button {
     padding: 8px 18px;
     background-color: transparent;
@@ -421,7 +376,6 @@ button:hover {
     transition: color 0.3s ease, border-bottom 0.3s ease;
 }
 /* Initially, only the active section is visible */
-
 .tabs button.active,
 .tabs button:hover {
     display: none;
