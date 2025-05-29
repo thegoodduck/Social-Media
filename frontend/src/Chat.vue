@@ -1,5 +1,5 @@
 <template>
-  <section class="chat-section">
+  <section class="chat-section" style="background: linear-gradient(to bottom right, #111827, #581c87); border:none;">
     <div class="tabs">
       <button
         :class="{ active: activeSection === 'users-section' }"
@@ -20,7 +20,8 @@
           <div class="spinner"></div>
         </div>
         <div id="load-more-trigger"></div>
-        <div class="users-container">
+     <div class="users-container" >
+
           <div
             v-for="user in users"
             :key="user.username"
@@ -211,4 +212,130 @@ export default {
     }
   }
 };
-</script>
+</script> 
+<style>
+.chat-section {
+    padding: 20px;
+    min-height: 650px;
+    height: 100vh;        /* Fill the full viewport height */
+    width: 100%;          /* Ensure full width */
+    box-sizing: border-box; /* Ensure padding doesn't increase height */
+}
+.user-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 20px 0;
+  background: linear-gradient(to bottom right, #111827, #581c87);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+  border-bottom: 2px solid #581c87;
+  gap: 20px;
+}
+.profile-picture img {
+  width: 30px;
+  height: 30px;
+  border-radius: 30%;
+  margin-right: 20px;
+  object-fit: cover;
+}
+.username {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+@media (max-width: 768px) {
+    .user-card {
+    padding: 9px 12px;
+  }
+  .profile-picture img {
+    width: 40px;
+    height: 40px;
+  }
+  .username {
+    font-size: 0.9rem;
+  }
+}
+#messages {
+        padding: 10px; /* Reduced from 20px */
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f0f0f0;
+    }
+
+#messages::-webkit-scrollbar {
+    width: 3px; /* Reduced from 6px */
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 2px; /* Reduced from 3px */
+}
+.message {
+    display: flex;
+    margin-bottom: 5px; /* Reduced from 10px */
+     font-size: 15px; /* Reduced from 18px */
+   border: none;
+}
+#input-container {
+    padding: 16px; /* Reduced from 15px */
+    background: rgba(245, 245, 245, 0.9);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+#input-message {
+    width: 80%; /* Reduced from 70% */
+    padding: 6px 8px; /* Reduced from 12px 15px */
+    border: none;
+    border-radius: 25px; /* Reduced from 25px */
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Reduced from 5px */
+    font-size: 14px; /* Reduced from 14px */
+    outline: none;
+    margin-right: 5px; /* Reduced from 10px */
+}
+
+#input-message:focus {
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2); /* Reduced from 8px */
+}
+#send-button {
+    padding: 6px 12px; /* Reduced from 12px 25px */
+    background: linear-gradient(45deg, #007bff, #00b4ff);
+    color: white;
+    border: none;
+    border-radius: 19px; /* Reduced from 25px */
+    cursor: pointer;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px; /* Reduced from 1px */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#send-button:hover {
+    transform: translateY(-1px); /* Reduced from -2px */
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3); /* Reduced from 15px */
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); } /* Reduced from 10px */
+  to { opacity: 1; transform: translateY(0); }
+}
+     .bubble {
+    background-color: #f9f9f9;
+    margin-bottom: 8px;
+    max-width: 80%;
+    border: none;
+  }
+
+  .text-row {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between username and message */
+  }
+  .message-text {
+    color: #000;
+    word-break: break-word;
+    flex: 1;
+     border: none;
+  }
+</style>
