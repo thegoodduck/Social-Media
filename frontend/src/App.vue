@@ -16,7 +16,6 @@
             </div>
           </transition>
           <div class="relative">
-            <img :src="userProfile.avatar" alt="User Avatar" class="hover-scale" @click="toggleProfileMenu" style="width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid #000; margin-right: 20px;">
             <transition name="fade">
               <div v-if="showProfileMenu" class="profile-menu">
                 <p class="name">{{ userProfile.name }}</p>

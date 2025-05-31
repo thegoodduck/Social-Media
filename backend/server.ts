@@ -2,8 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import type { Request, Response } from 'express';
-import { registerUser, loginUser, getUserInfo } from './controller/user';
+import { registerUser, loginUser, getUserInfo } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
+import { createPost, getPosts } from './controller/post.js';
 dotenv.config();
 
 
@@ -60,6 +61,10 @@ app.get('/api/user-info', (req, res) => {
     }
   })();
 });
+
+app.get('/api/posts', getPosts as any);
+app.post('/api/posts', createPost as any);
+
 export default app;
 
 
