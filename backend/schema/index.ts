@@ -11,11 +11,11 @@ import { Pool } from 'pg';
 import * as schema from './schema';
 
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 5432,
-  user: process.env.DB_USER || 'social_user',
-  password: process.env.DB_PASSWORD || 'social_pass',
-  database: process.env.DB_NAME || 'social_db',
+  host: 'localhost',
+  port: 5432,
+  user: 'postgres',
+  password: 'sync',
+  database: 'social_db',
 });
 
 export const db = drizzle(pool, { schema });

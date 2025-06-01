@@ -6,8 +6,8 @@ export default {
   dbCredentials: {
     host: "localhost",
     port: 5432,
-    user: "social_user",
-    password: "social_pass",
+    user: "postgres",
+    password: "sync",
     database: "social_db",
     ssl: false
   }

@@ -1,5 +1,28 @@
 <template>
   <section class="posts-section">
+    <!-- Post Creation Form -->
+    <form class="post-form" @submit.prevent="postOpinion" style="margin-bottom: 2rem; background: #181818; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+      <textarea
+        v-model="postText"
+        placeholder="What's on your mind?"
+        rows="3"
+        maxlength="500"
+        style="width: 100%; resize: none; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; padding: 10px; margin-bottom: 1rem; font-size: 1rem;"
+      ></textarea>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <input
+          id="file-input"
+          type="file"
+          accept="image/*"
+          @change="handleImageUpload"
+          style="color: #fff;"
+        />
+        <img v-if="imagePreview" :src="imagePreview" alt="Preview" style="max-width: 80px; max-height: 80px; border-radius: 8px; border: 1px solid #444;" />
+        <button id="submitBtn" type="submit" style="background: #007bff; color: #fff; border: none; border-radius: 8px; padding: 0.5rem 1.5rem; font-size: 1rem; cursor: pointer; transition: background 0.2s;">
+          Post
+        </button>
+      </div>
+    </form>
     <!-- Sorting Buttons -->
     <div id="sort-options" style="gap:15%;">
       <button class="sort-button" :class="{ active: sortOption === 'most-liked' }" @click="sortPosts('most-liked')">𝓖𝓮𝓷𝓮𝓻𝓪𝓵</button>
@@ -81,6 +104,8 @@
 </template>
 
 <script>
+import { nodeAPI } from './config/api.js';
+
 export default {
   props: ['searchQuery', 'loggedInUsername', 'sessionId'],
   data() {
@@ -104,11 +129,9 @@ export default {
   },
   methods: {
     getPostHeaderHtml(post) {
+      // Avatar removed from post header
       return `
         <div class="post-header">
-          <div class="profile-picture" onclick="showUserProfile('${post.username.replace(/'/g, "\\'")}', '${post.profilePicture || 'pfp2.jpg'}')">
-            <img src="${post.profilePicture || 'pfp2.jpg'}" alt="${post.username.replace(/'/g, "\\'")}\'s profile picture" />
-          </div>
           <div class="username">
             <strong>${post.username.replace(/'/g, "\\'")}</strong>
           </div>
@@ -172,16 +195,61 @@ getCommentHtml(postId, comment) {
   `;
 }
 ,
-    async fetchPosts(page = 1, sort = 'newest') {
+    async fetchPosts() {
+      this.loading = true;
       try {
-        const response = await fetch(
-          `https://sports321.vercel.app/api/posts?page=${page}&limit=16&sort=${sort}`
-        );
-        if (!response.ok) throw new Error('Failed to load posts');
-        return await response.json();
+        const response = await nodeAPI.request('/api/posts');
+        this.posts = response.posts.map(post => ({
+          ...post,
+          showComments: false,
+          commentInput: '',
+          comments: post.comments || []
+        }));
+        this.hasMorePosts = false; // In-memory API, no pagination
       } catch (error) {
-        console.error('Error fetching posts:', error);
-        return { posts: [], hasMorePosts: false };
+        this.posts = [];
+        this.hasMorePosts = false;
+        this.showNotification('Failed to load posts', true);
+      } finally {
+        this.loading = false;
+      }
+    },
+    async submitPost(postText, imageData) {
+      if (!postText && !imageData) {
+        this.showNotification('Post content cannot be empty!', true);
+        return;
+      }
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn?.classList.add('button-clicked');
+      try {
+        const postData = {
+          message: postText,
+          username: this.loggedInUsername,
+          sessionId: this.sessionId,
+          photo: imageData,
+        };
+        const newPost = await nodeAPI.request('/api/posts', {
+          method: 'POST',
+          body: JSON.stringify(postData)
+        });
+        this.lastSentPostId = newPost._id;
+        newPost.showComments = false;
+        newPost.commentInput = '';
+        newPost.comments = newPost.comments || [];
+        newPost.likes = newPost.likes || 0;
+        newPost.dislikes = newPost.dislikes || 0;
+        newPost.views = newPost.views || 0;
+        newPost.comments.forEach(comment => {
+          comment.showReplies = false;
+          comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
+        });
+        this.posts.unshift(newPost);
+        this.showNotification('Post submitted successfully!', false);
+      } catch (error) {
+        this.showNotification('Error submitting post: ' + error.message, true);
+      } finally {
+        submitBtn?.classList.remove('button-clicked');
+        this.resetForm();
       }
     },
     showLoading() {
@@ -244,62 +312,6 @@ getCommentHtml(postId, comment) {
         reader.readAsDataURL(file);
       } else {
         await this.submitPost(this.postText.trim(), null);
-      }
-    },
-    async submitPost(postText, imageData) {
-      if (!postText && !imageData) {
-        this.showNotification('Post content cannot be empty!', true);
-        return;
-      }
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.classList.add('button-clicked');
-      try {
-        const postData = {
-          message: postText,
-          username: this.loggedInUsername,
-          sessionId: this.sessionId,
-          photo: imageData,
-        };
-        const response = await fetch('https://sports321.vercel.app/api/postOpinion', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(postData),
-          credentials: 'include',
-        });
-        if (!response.ok) {
-          this.showNotification('Error: Failed to submit post', true);
-          return;
-        }
-        const newPost = await response.json();
-        this.lastSentPostId = newPost._id;
-        newPost.showComments = false;
-        newPost.commentInput = '';
-        newPost.comments = newPost.comments || [];
-        newPost.likes = newPost.likes || 0;
-        newPost.dislikes = newPost.dislikes || 0;
-        newPost.views = newPost.views || 0;
-        newPost.comments.forEach(comment => {
-          comment.showReplies = false;
-          comment.replies = Array.isArray(comment.replies) ? comment.replies : [];
-        });
-        this.posts.unshift(newPost);
-        this.showNotification('Post submitted successfully!', false);
-        const pushNotificationResponse = await fetch(
-          'https://2damnit.vercel.app/api/notifications',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'send-push-notification' }),
-          }
-        );
-        if (!pushNotificationResponse.ok) {
-          console.error('Error sending push notification.');
-        }
-      } catch (error) {
-        this.showNotification('Error submitting post: ' + error.message, true);
-      } finally {
-        submitBtn.classList.remove('button-clicked');
-        this.resetForm();
       }
     },
     resetForm() {
@@ -444,7 +456,7 @@ getCommentHtml(postId, comment) {
     }
   },
   created() {
-    this.loadMorePosts();
+    this.fetchPosts();
     const style = document.createElement('style');
     style.textContent = `
       .post-header { padding: 5px 10px; display: flex; align-items: center; }

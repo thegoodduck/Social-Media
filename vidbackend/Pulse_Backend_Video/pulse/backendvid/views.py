@@ -140,6 +140,65 @@ def video_feed(request):
     # Return just the video IDs for simplicity
     return JsonResponse({'feed': [v['video_id'] for v in recommended]}, status=200)
 
+@csrf_exempt
+def video_feed_json(request):
+    """JSON API endpoint for video feed - for Vue frontend"""
+    user_id = request.GET.get('user_id') or request.session.session_key
+    if not user_id:
+        request.session.save()
+        user_id = request.session.session_key
+
+    # Get watched and unwatched video_ids
+    watched_videos = set(VideoWatch.objects.filter(user_id=user_id).values_list('video_id', flat=True))
+    all_posts = list(VideoPost.objects.all())
+
+    # Recommend unwatched videos first, ordered by popularity
+    unwatched_recommended = (
+        VideoWatch.objects
+        .exclude(video_id__in=watched_videos)
+        .values('video_id')
+        .annotate(watch_count=models.Count('id'))
+        .order_by('-watch_count')
+    )
+    unwatched_ids = [str(v['video_id']).strip() for v in unwatched_recommended]
+    unwatched_posts = [p for p in all_posts if p.video_id in unwatched_ids]
+
+    # Add any remaining unwatched posts not in recommended
+    extra_unwatched_posts = [p for p in all_posts if (p.video_id not in watched_videos and p not in unwatched_posts)]
+
+    # Then show watched videos, ordered by most recently watched
+    recently_watched_ids = list(VideoWatch.objects.filter(user_id=user_id).order_by('-watched_at').values_list('video_id', flat=True))
+    watched_posts = [p for vid in recently_watched_ids for p in all_posts if p.video_id == vid]
+
+    # Add any posts not yet included
+    included_ids = set([p.video_id for p in unwatched_posts] + [p.video_id for p in extra_unwatched_posts] + [p.video_id for p in watched_posts])
+    missing_posts = [p for p in all_posts if p.video_id not in included_ids]
+
+    # Final feed: addictive order
+    posts = unwatched_posts + extra_unwatched_posts + watched_posts + missing_posts
+
+    # Convert to JSON-serializable format
+    feed_data = []
+    for post in posts:
+        feed_data.append({
+            'id': post.id,
+            'video_id': post.video_id,
+            'caption': post.caption,
+            'video_url': f'/api/videopost/?video_id={post.video_id}',
+            'created_at': post.created_at.isoformat() if hasattr(post, 'created_at') else None,
+            'user': {
+                'id': post.user.id if post.user else None,
+                'username': post.user.username if post.user else 'Anonymous',
+                'avatar': None  # Add avatar field to your model if needed
+            }
+        })
+
+    return JsonResponse({
+        'success': True,
+        'feed': feed_data,
+        'user_id': user_id
+    }, status=200)
+
 def feed(request):
     user_id = request.GET.get('user_id') or request.session.session_key
     if not user_id:

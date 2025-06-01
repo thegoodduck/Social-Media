@@ -9,6 +9,7 @@
     "drizzle-orm": "^0.43.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.18"
+    "@types/cors": "^2.8.18",
+    "typescript": "^5.8.3"
   }
 }
