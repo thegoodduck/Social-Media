@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import type { Request, Response } from 'express';
 import { registerUser, loginUser, getUserInfo } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
-import { createPost, getPosts } from './controller/post.js';
+import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
 dotenv.config();
 
 
@@ -64,6 +64,8 @@ app.get('/api/user-info', (req, res) => {
 
 app.get('/api/posts', getPosts as any);
 app.post('/api/posts', createPost as any);
+app.post('/api/posts/:postId/like', likePost as any);
+app.post('/api/posts/:postId/dislike', dislikePost as any);
 
 export default app;
 

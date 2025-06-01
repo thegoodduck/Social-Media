@@ -107,7 +107,7 @@
 import { nodeAPI } from './config/api.js';
 
 export default {
-  props: ['searchQuery', 'loggedInUsername', 'sessionId'],
+  props: ['searchQuery', 'loggedInUsername', 'sessionId', 'userId', 'authToken'],
   data() {
     return {
       posts: [],
@@ -421,13 +421,50 @@ getCommentHtml(postId, comment) {
     showNotification(message, isError) {
       console.log(`${isError ? 'Error' : 'Success'}: ${message}`);
     },
-    likePost(postId) {
+    async likePost(postId) {
       const post = this.posts.find(p => p._id === postId);
-      if (post) post.likes++;
+      if (!post) return;
+      // Use real userId (UUID) from props/localStorage
+      const userId = this.userId || localStorage.getItem('userId');
+      if (!userId) {
+        this.showNotification('You must be logged in to like posts.', true);
+        return;
+      }
+      try {
+        const response = await nodeAPI.request(`/api/posts/${postId}/like`, {
+          method: 'POST',
+          body: JSON.stringify({ userId })
+        });
+        if (response.liked) {
+          post.likes++;
+        } else {
+          post.likes = Math.max(0, post.likes - 1);
+        }
+      } catch (e) {
+        this.showNotification('Failed to like post', true);
+      }
     },
-    dislikePost(postId) {
+    async dislikePost(postId) {
       const post = this.posts.find(p => p._id === postId);
-      if (post) post.dislikes++;
+      if (!post) return;
+      const userId = this.userId || localStorage.getItem('userId');
+      if (!userId) {
+        this.showNotification('You must be logged in to dislike posts.', true);
+        return;
+      }
+      try {
+        const response = await nodeAPI.request(`/api/posts/${postId}/dislike`, {
+          method: 'POST',
+          body: JSON.stringify({ userId })
+        });
+        if (response.disliked) {
+          post.dislikes++;
+        } else {
+          post.dislikes = Math.max(0, post.dislikes - 1);
+        }
+      } catch (e) {
+        this.showNotification('Failed to dislike post', true);
+      }
     },
     editPost(postId, username) {
       console.log(`Editing post ${postId} by ${username}`);
