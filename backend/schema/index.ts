@@ -11,7 +11,7 @@ import { Pool } from 'pg';
 import * as schema from './schema';
 
 const pool = new Pool({
-  host: 'localhost',
+  host: 'db',
   port: 5432,
   user: 'postgres',
   password: 'sync',

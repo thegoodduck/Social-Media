@@ -75,6 +75,8 @@
 
 <script>
 import * as Ably from 'ably';
+import * as nacl from 'tweetnacl';
+import * as naclUtil from 'tweetnacl-util';
 
 export default {
   name: 'Chat',
@@ -91,7 +93,11 @@ export default {
       username: localStorage.getItem('username')?.trim() || 'Unknown',
       userColors: {},
       ably: null,
-      channel: null
+      channel: null,
+      keyPair: null,
+      publicKeyBase64: '',
+      privateKeyBase64: '',
+      peerPublicKeys: {} // username: publicKeyBase64
     };
   },
   methods: {
@@ -154,16 +160,12 @@ export default {
         color: this.getColorForUsername(username)
       };
     },
-    appendMessage(text, username, id) {
-      if (this.sentMessages.has(id)) return;
-      this.messages.push({ text, username, id });
-      this.sentMessages.add(id);
-      this.$nextTick(() => {
-        const messagesContainer = this.$el.querySelector('#messages');
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      });
+    async fetchPeerPublicKey(username) {
+      // TODO: fetch peer's public key from backend
+      // For demo, just return localStorage.getItem('publicKey')
+      return localStorage.getItem('publicKey');
     },
-    sendMessage() {
+    async sendMessage() {
       const message = this.inputMessage.trim();
       this.warningMessage = '';
       if (!this.username || this.username === 'Unknown') {
@@ -171,30 +173,82 @@ export default {
         return;
       }
       if (message) {
+        // --- ENCRYPT MESSAGE ---
+        const peerUsername = 'recipient'; // TODO: set real recipient
+        const peerPublicKeyBase64 = await this.fetchPeerPublicKey(peerUsername);
+        const nonce = nacl.randomBytes(nacl.box.nonceLength);
+        const messageUint8 = naclUtil.decodeUTF8(message);
+        const peerPublicKey = naclUtil.decodeBase64(peerPublicKeyBase64);
+        const myPrivateKey = naclUtil.decodeBase64(this.privateKeyBase64);
+        const encrypted = nacl.box(messageUint8, nonce, peerPublicKey, myPrivateKey);
+        const encryptedBase64 = naclUtil.encodeBase64(encrypted);
+        const nonceBase64 = naclUtil.encodeBase64(nonce);
+        // Send encrypted message
         const messageId = Date.now() + Math.random();
-        this.appendMessage(message, this.username, messageId);
+        this.appendMessage('[encrypted]', this.username, messageId);
         if (this.channel) {
           this.channel.publish('new-message', {
-            text: message,
+            text: encryptedBase64,
             id: messageId,
-            username: this.username
+            username: this.username,
+            nonce: nonceBase64,
+            senderPublicKey: this.publicKeyBase64
           });
         }
         this.inputMessage = '';
       }
+    },
+    appendMessage(text, username, id, nonce, senderPublicKey) {
+      // Try to decrypt if encrypted
+      if (text && nonce && senderPublicKey) {
+        try {
+          const nonceUint8 = naclUtil.decodeBase64(nonce);
+          const encryptedUint8 = naclUtil.decodeBase64(text);
+          const senderPubKeyUint8 = naclUtil.decodeBase64(senderPublicKey);
+          const myPrivKeyUint8 = naclUtil.decodeBase64(this.privateKeyBase64);
+          const decrypted = nacl.box.open(encryptedUint8, nonceUint8, senderPubKeyUint8, myPrivKeyUint8);
+          if (decrypted) {
+            text = naclUtil.encodeUTF8(decrypted);
+          } else {
+            text = '[decryption failed]';
+          }
+        } catch (e) {
+          text = '[decryption error]';
+        }
+      }
+      if (this.sentMessages.has(id)) return;
+      this.messages.push({ text, username, id });
+      this.sentMessages.add(id);
+      this.$nextTick(() => {
+        const messagesContainer = this.$el.querySelector('#messages');
+        if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      });
     }
   },
   mounted() {
     this.fetchUsers();
+    // --- E2E ENCRYPTION KEY GENERATION ---
+    let priv = localStorage.getItem('privateKey');
+    let pub = localStorage.getItem('publicKey');
+    if (!priv || !pub) {
+      const keyPair = nacl.box.keyPair();
+      priv = naclUtil.encodeBase64(keyPair.secretKey);
+      pub = naclUtil.encodeBase64(keyPair.publicKey);
+      localStorage.setItem('privateKey', priv);
+      localStorage.setItem('publicKey', pub);
+    }
+    this.privateKeyBase64 = priv;
+    this.publicKeyBase64 = pub;
+    // TODO: send publicKeyBase64 to backend for user profile
     // Initialize Ably
     this.ably = new Ably.Realtime('9frHeA.Si13Zw:KVzVyovw6hCu4RRuy6P11Tyl0h7MJIzv2Q_n4YgbNnE'); // Replace with your Ably API key
     this.ably.connection.on('connected', () => {
       console.log('Connected to Ably');
       this.channel = this.ably.channels.get('chat-room');
       this.channel.subscribe('new-message', (msg) => {
-        const { text, id, username } = msg.data;
+        const { text, id, username, nonce, senderPublicKey } = msg.data;
         if (!this.sentMessages.has(id)) {
-          this.appendMessage(text, username, id);
+          this.appendMessage(text, username, id, nonce, senderPublicKey);
         }
       });
     });
