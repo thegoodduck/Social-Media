@@ -236,265 +236,8 @@
   </section>
 </template>
 
-<script>
-export default {
-  name: 'Settings',
-  data() {
-    return {
-      activeSection: null, // Start with no section active
-      userProfile: {
-        username: '',
-        profilePicture: 'default.jpg',
-        description: '',
-        location: '',
-        status: '',
-        profession: '',
-        hobby: ''
-      },
-      newProfilePicture: null,
-      settings: {
-        darkMode: false,
-        notifications: true,
-        privateAccount: false,
-        showOnlineStatus: true,
-        twoFactorAuth: false
-      }
-    };
-  },
-  computed: {
-    toggleSettings() {
-      return [
-        { key: 'darkMode', label: 'Dark Mode' },
-        { key: 'notifications', label: 'Notifications' },
-        { key: 'privateAccount', label: 'Private Account' },
-        { key: 'showOnlineStatus', label: 'Show Online Status' },
-        { key: 'twoFactorAuth', label: 'Two-Factor Authentication' }
-      ];
-    }
-  },
-  methods: {
-    toggleSection(section) {
-      this.activeSection = this.activeSection === section ? null : section;
-    },
-    async fetchUserSettings() {
-      try {
-        const username = localStorage.getItem('username');
-        if (!username) {
-          alert('Username not found!');
-          return;
-        }
-
-        const response = await fetch(`https://sports321.vercel.app/api/posts?username=${username}`);
-        const data = await response.json();
-
-        this.userProfile = {
-          username: username,
-          location: data.location || 'Location not available',
-          status: data.status || 'Status not available',
-          profession: data.profession || 'Profession not available',
-          hobby: data.hobby || 'Hobby not available',
-          description: data.description || 'No description available',
-          profilePicture: data.profile_picture?.startsWith('data:image')
-            ? data.profile_picture
-            : `https://sports321.vercel.app/${data.profile_picture || 'default.jpg'}`
-        };
-      } catch (error) {
-        console.error('Error fetching user settings:', error);
-        this.userProfile = {
-          username: localStorage.getItem('username') || '',
-          profilePicture: 'default.jpg',
-          description: 'No description available',
-          location: 'Location not available',
-          status: 'Status not available',
-          profession: 'Profession not available',
-          hobby: 'Hobby not available'
-        };
-      }
-    },
-    async updateUserProfileField(field, newValue) {
-      const username = localStorage.getItem('username');
-      if (!username) {
-        alert('Username not found!');
-        return;
-      }
-
-      try {
-        const response = await fetch('https://sports123.vercel.app/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, [field]: newValue })
-        });
-
-        const data = await response.json();
-        const successMessage = `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`;
-
-        if (data.message === successMessage) {
-          alert(`Your ${field} has been updated!`);
-          this.userProfile[field] = newValue;
-        } else {
-          alert(`Failed to update ${field}`);
-        }
-      } catch (error) {
-        console.error(`Error updating ${field}:`, error);
-        alert(`Failed to update ${field}`);
-      }
-    },
-    changeUsername() {
-      const newUsername = prompt('Enter your new username:', this.userProfile.username);
-      if (newUsername?.trim()) {
-        this.updateUserProfileField('username', newUsername.trim());
-      }
-    },
-    editDescription() {
-      const newDescription = prompt('Enter your new description:', this.userProfile.description);
-      if (newDescription?.trim()) {
-        this.updateUserProfileField('description', newDescription.trim());
-      }
-    },
-    editLocation() {
-      const newLocation = prompt('Enter your new location:', this.userProfile.location);
-      if (newLocation?.trim()) {
-        this.updateUserProfileField('location', newLocation.trim());
-      }
-    },
-    editStatus() {
-      const newStatus = prompt('Enter your new status:', this.userProfile.status);
-      if (newStatus?.trim()) {
-        this.updateUserProfileField('status', newStatus.trim());
-      }
-    },
-    editProfession() {
-      const newProfession = prompt('Enter your new profession:', this.userProfile.profession);
-      if (newProfession?.trim()) {
-        this.updateUserProfileField('profession', newProfession.trim());
-      }
-    },
-    editHobby() {
-      const newHobby = prompt('Enter your new hobby:', this.userProfile.hobby);
-      if (newHobby?.trim()) {
-        this.updateUserProfileField('hobby', newHobby.trim());
-      }
-    },
-    triggerFileInput() {
-      this.$refs.profileFileInput.click();
-    },
-    handleProfilePictureChange(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.newProfilePicture = e.target.result;
-          this.userProfile.profilePicture = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    },
-    async saveProfilePicture() {
-      if (!this.newProfilePicture) return;
-
-      try {
-        const username = localStorage.getItem('username');
-        if (!username) {
-          alert('Username not found!');
-          return;
-        }
-
-        const response = await fetch('https://sports123.vercel.app/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, profilePicture: this.newProfilePicture })
-        });
-
-        const data = await response.json();
-
-        if (data.message === 'Profile picture updated successfully') {
-          alert('Profile picture updated!');
-          this.newProfilePicture = null;
-        } else {
-          alert('Failed to update profile picture');
-        }
-      } catch (error) {
-        console.error('Error updating profile picture:', error);
-        alert('Failed to update profile picture');
-      }
-    },
-    toggleSetting(key) {
-      this.settings[key] = !this.settings[key];
-      if (key === 'darkMode') {
-        this.toggleDarkMode();
-      }
-    },
-    toggleDarkMode() {
-      document.documentElement.classList.toggle('dark-mode', this.settings.darkMode);
-      localStorage.setItem('darkMode', this.settings.darkMode);
-    },
-    getStatusText(key) {
-      switch (key) {
-        case 'darkMode': return this.settings.darkMode ? 'On' : 'Off';
-        case 'notifications': return this.settings.notifications ? 'On' : 'Off';
-        case 'privateAccount': return this.settings.privateAccount ? 'On' : 'Off';
-        case 'showOnlineStatus': return this.settings.showOnlineStatus ? 'Visible' : 'Hidden';
-        case 'twoFactorAuth': return this.settings.twoFactorAuth ? 'Enabled' : 'Disabled';
-        default: return '';
-      }
-    },
-    getToggleStyle(key) {
-      return {
-        width: '50px',
-        height: '26px',
-        borderRadius: '13px',
-        background: this.settings[key] ? '#5865F2' : '#4F545C',
-        position: 'relative',
-        cursor: 'pointer',
-        transition: 'background 0.3s ease'
-      };
-    },
-    getKnobStyle(key) {
-      return {
-        height: '22px',
-        width: '22px',
-        background: '#FFFFFF',
-        borderRadius: '50%',
-        position: 'absolute',
-        top: '2px',
-        left: this.settings[key] ? '26px' : '2px',
-        transition: 'left 0.3s ease'
-      };
-    },
-    saveSettings() {
-      console.log('Settings saved:', this.settings);
-      alert('Settings saved successfully!');
-    },
-    openBlockedUsers() {
-      alert('Navigating to Blocked Users...');
-    },
-    viewMyActivity() {
-      alert('View My Activity...');
-    },
-    viewAboutUs() {
-      alert('View About Us...');
-    },
-    viewTerms() {
-      alert('View Terms and Conditions...');
-    },
-    logOut() {
-      alert('Logged out...');
-    }
-  },
-  mounted() {
-    this.fetchUserSettings();
-    const savedDarkMode = localStorage.getItem('dark-mode');
-    this.settings.darkMode = savedDarkMode;
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-    }
-  }
-};
-</script>
-
 <style scoped>
 .settings-section {
-  min-height: 100vh;
   font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color: #000;
   display: flex;
@@ -505,11 +248,11 @@ export default {
   max-width: 600px;
   background-color: #000;
   overflow-y: auto;
-  padding: 20px;
+padding: 0 15px 15px 15px;
   border-radius: 8px;
 }
 .sidebar-title {
-  font-size: 20px;
+  font-size: 10px;
   font-weight: 600;
   color: #060607;
 }
@@ -675,4 +418,270 @@ export default {
   border-top: 1px solid #202225;
 }
 </style>
+<script>
+export default {
+  name: 'Settings',
+  data() {
+    return {
+      activeSection: null, // Start with no section active
+      userProfile: {
+        username: '',
+        profilePicture: 'default.jpg',
+        description: '',
+        location: '',
+        status: '',
+        profession: '',
+        hobby: ''
+      },
+      newProfilePicture: null,
+      settings: {
+        darkMode: false,
+        notifications: true,
+        privateAccount: false,
+        showOnlineStatus: true,
+        twoFactorAuth: false
+      }
+    };
+  },
+  computed: {
+    toggleSettings() {
+      return [
+        { key: 'darkMode', label: 'Dark Mode' },
+        { key: 'notifications', label: 'Notifications' },
+        { key: 'privateAccount', label: 'Private Account' },
+        { key: 'showOnlineStatus', label: 'Show Online Status' },
+        { key: 'twoFactorAuth', label: 'Two-Factor Authentication' }
+      ];
+    }
+  },
+  methods: {
+    toggleSection(section) {
+      this.activeSection = this.activeSection === section ? null : section;
+    },
+    async fetchUserSettings() {
+      try {
+        const username = localStorage.getItem('username');
+        if (!username) {
+          alert('Username not found!');
+          return;
+        }
+
+        const response = await fetch(`https://sports321.vercel.app/api/posts?username=${username}`);
+        const data = await response.json();
+
+        this.userProfile = {
+          username: username,
+          location: data.location || 'Location not available',
+          status: data.status || 'Status not available',
+          profession: data.profession || 'Profession not available',
+          hobby: data.hobby || 'Hobby not available',
+          description: data.description || 'No description available',
+          profilePicture: data.profile_picture?.startsWith('data:image')
+            ? data.profile_picture
+            : `https://sports321.vercel.app/${data.profile_picture || 'default.jpg'}`
+        };
+      } catch (error) {
+        console.error('Error fetching user settings:', error);
+        this.userProfile = {
+          username: localStorage.getItem('username') || '',
+          profilePicture: 'default.jpg',
+          description: 'No description available',
+          location: 'Location not available',
+          status: 'Status not available',
+          profession: 'Profession not available',
+          hobby: 'Hobby not available'
+        };
+      }
+    },
+    async updateUserProfileField(field, newValue) {
+      const username = localStorage.getItem('username');
+      if (!username) {
+        alert('Username not found!');
+        return;
+      }
+
+      try {
+        const response = await fetch('https://sports123.vercel.app/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, [field]: newValue })
+        });
+
+        const data = await response.json();
+        const successMessage = `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`;
+
+        if (data.message === successMessage) {
+          alert(`Your ${field} has been updated!`);
+          this.userProfile[field] = newValue;
+        } else {
+          alert(`Failed to update ${field}`);
+        }
+      } catch (error) {
+        console.error(`Error updating ${field}:`, error);
+        alert(`Failed to update ${field}`);
+      }
+    },
+    changeUsername() {
+      const newUsername = prompt('Enter your new username:', this.userProfile.username);
+      if (newUsername?.trim()) {
+        this.updateUserProfileField('username', newUsername.trim());
+      }
+    },
+    editDescription() {
+      const newDescription = prompt('Enter your new description:', this.userProfile.description);
+      if (newDescription?.trim()) {
+        this.updateUserProfileField('description', newDescription.trim());
+      }
+    },
+    editLocation() {
+      const newLocation = prompt('Enter your new location:', this.userProfile.location);
+      if (newLocation?.trim()) {
+        this.updateUserProfileField('location', newLocation.trim());
+      }
+    },
+    editStatus() {
+      const newStatus = prompt('Enter your new status:', this.userProfile.status);
+      if (newStatus?.trim()) {
+        this.updateUserProfileField('status', newStatus.trim());
+      }
+    },
+    editProfession() {
+      const newProfession = prompt('Enter your new profession:', this.userProfile.profession);
+      if (newProfession?.trim()) {
+        this.updateUserProfileField('profession', newProfession.trim());
+      }
+    },
+    editHobby() {
+      const newHobby = prompt('Enter your new hobby:', this.userProfile.hobby);
+      if (newHobby?.trim()) {
+        this.updateUserProfileField('hobby', newHobby.trim());
+      }
+    },
+    triggerFileInput() {
+      this.$refs.profileFileInput.click();
+    },
+    handleProfilePictureChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.newProfilePicture = e.target.result;
+          this.userProfile.profilePicture = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+async saveProfilePicture() {
+  if (!this.newProfilePicture) return;
+
+  try {
+    const username = localStorage.getItem('username');
+    const userId = localStorage.getItem('userId');
+    const authToken = localStorage.getItem('authToken');
+
+    if (!username || !userId || !authToken) {
+      alert('User information not found!');
+      return;
+    }
+
+    const response = await fetch('https://sports123.vercel.app/api/posts', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ username, userId, profilePicture: this.newProfilePicture })
+    });
+
+    const data = await response.json();
+
+    if (data.message === 'Profile picture updated successfully') {
+      alert('Profile picture updated!');
+      localStorage.setItem('profilePic', this.newProfilePicture);
+      if (data.newToken) {
+        localStorage.setItem('authToken', data.newToken);
+      }
+      this.newProfilePicture = null;
+    } else {
+      alert(data.message || 'Failed to update profile picture');
+    }
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    alert('Failed to update profile picture');
+  }
+},
+    toggleSetting(key) {
+      this.settings[key] = !this.settings[key];
+      if (key === 'darkMode') {
+        this.toggleDarkMode();
+      }
+    },
+    toggleDarkMode() {
+      document.documentElement.classList.toggle('dark-mode', this.settings.darkMode);
+      localStorage.setItem('darkMode', this.settings.darkMode);
+    },
+    getStatusText(key) {
+      switch (key) {
+        case 'darkMode': return this.settings.darkMode ? 'On' : 'Off';
+        case 'notifications': return this.settings.notifications ? 'On' : 'Off';
+        case 'privateAccount': return this.settings.privateAccount ? 'On' : 'Off';
+        case 'showOnlineStatus': return this.settings.showOnlineStatus ? 'Visible' : 'Hidden';
+        case 'twoFactorAuth': return this.settings.twoFactorAuth ? 'Enabled' : 'Disabled';
+        default: return '';
+      }
+    },
+    getToggleStyle(key) {
+      return {
+        width: '50px',
+        height: '26px',
+        borderRadius: '13px',
+        background: this.settings[key] ? '#5865F2' : '#4F545C',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background 0.3s ease'
+      };
+    },
+    getKnobStyle(key) {
+      return {
+        height: '22px',
+        width: '22px',
+        background: '#FFFFFF',
+        borderRadius: '50%',
+        position: 'absolute',
+        top: '2px',
+        left: this.settings[key] ? '26px' : '2px',
+        transition: 'left 0.3s ease'
+      };
+    },
+    saveSettings() {
+      console.log('Settings saved:', this.settings);
+      alert('Settings saved successfully!');
+    },
+    openBlockedUsers() {
+      alert('Navigating to Blocked Users...');
+    },
+    viewMyActivity() {
+      alert('View My Activity...');
+    },
+    viewAboutUs() {
+      alert('View About Us...');
+    },
+    viewTerms() {
+      alert('View Terms and Conditions...');
+    },
+    logOut() {
+      alert('Logged out...');
+    }
+  },
+  mounted() {
+    this.fetchUserSettings();
+    const savedDarkMode = localStorage.getItem('dark-mode');
+    this.settings.darkMode = savedDarkMode;
+    if (savedDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+    }
+  }
+};
+</script>
+
 
