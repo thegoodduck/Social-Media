@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { db } from '../schema/index';
-import { posts, users } from '../schema/schema';
-import { eq, desc } from 'drizzle-orm';
+import { posts, users, likes } from '../schema/schema';
+import { eq, desc, and } from 'drizzle-orm';
+import { validate as validateUUID } from 'uuid';
 
 export const createPost = async (req: Request, res: Response) => {
   const { username, message, photo } = req.body;
@@ -61,4 +62,44 @@ export const getPosts = async (req: Request, res: Response) => {
     commentInput: ''
   }));
   res.json({ posts: postsOut });
+};
+
+export const likePost = async (req: Request, res: Response) => {
+  const { userId } = req.body;
+  const postId = req.params.postId;
+  if (!userId || !postId) return res.status(400).json({ error: 'userId and postId required' });
+  if (!validateUUID(userId)) return res.status(400).json({ error: 'Invalid userId (must be UUID)' });
+  if (!validateUUID(postId)) return res.status(400).json({ error: 'Invalid postId (must be UUID)' });
+  // Check if like exists
+  const existing = await db.select().from(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+  if (existing.length) {
+    // Already liked, remove like (toggle off)
+    await db.delete(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    return res.json({ liked: false });
+  } else {
+    // Add like
+    await db.insert(likes).values({ userId, postId });
+    return res.json({ liked: true });
+  }
+};
+
+export const dislikePost = async (req: Request, res: Response) => {
+  // For now, treat as a toggle for a 'dislike' (could be a separate table or a flag in likes table)
+  // Here, we use likes table with a 'dislike' flag for extensibility
+  const { userId } = req.body;
+  const postId = req.params.postId;
+  if (!userId || !postId) return res.status(400).json({ error: 'userId and postId required' });
+  if (!validateUUID(userId)) return res.status(400).json({ error: 'Invalid userId (must be UUID)' });
+  if (!validateUUID(postId)) return res.status(400).json({ error: 'Invalid postId (must be UUID)' });
+  // Check if dislike exists
+  const existing = await db.select().from(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+  if (existing.length) {
+    // Already disliked, remove (toggle off)
+    await db.delete(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    return res.json({ disliked: false });
+  } else {
+    // Add dislike (for now, just insert like as a placeholder)
+    await db.insert(likes).values({ userId, postId });
+    return res.json({ disliked: true });
+  }
 };

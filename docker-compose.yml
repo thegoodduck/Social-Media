@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: social_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sync
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:sync@db:5432/social_db
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    working_dir: /app
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    working_dir: /app
+
+  vidbackend:
+    build: ./vidbackend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    working_dir: /app
+
+volumes:
+  pgdata:
