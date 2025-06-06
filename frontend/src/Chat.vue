@@ -1,5 +1,5 @@
 <template>
-  <section class="chat-section" style="background: linear-gradient(to bottom right, #111827, #581c87); border:none;">
+  <section class="chat-section" style="background-color: #000;">
     <div class="tabs">
       <button
         :class="{ active: activeSection === 'users-section' }"
@@ -14,29 +14,29 @@
         World Chat
       </button>
     </div>
-    <div class="sections">
+    <div class="sections" >
       <div v-show="activeSection === 'users-section'" class="section active">
         <div id="loading" class="loading" v-if="loading">
           <div class="spinner"></div>
         </div>
         <div id="load-more-trigger"></div>
-     <div class="users-container" >
-
+     <div class="users-container">
           <div
             v-for="user in users"
             :key="user.username"
-            class="user-card"
+            class="user-card" 
+           
             @click="handleUserClick(user)"
-          >
-            <div class="profile-picture">
+            style="display: flex;align-items: center;padding: 12px 16px;margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; border-bottom: 2px solid #581c87;gap: 20px;">
+            <div class="profile-picture" style="  width: 30px; height: 30px; border-radius: 30%;margin-right: 20px; object-fit: cover;">
               <img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" />
             </div>
-            <div class="username"><strong>{{ user.username }}</strong></div>
+            <div class="username" style="font-size: 1.1rem;font-weight: 700;color: #fff;"><strong>{{ user.username }}</strong></div>
           </div>
         </div>
       </div>
       <div v-show="activeSection === 'World Chat'" class="section">
-        <div id="chat-container">
+        <div id="chat-container" style=" min-height: 500px;">
           <div id="messages">
             <div
               v-for="message in messages"
@@ -47,7 +47,7 @@
                 <div class="text-row">
                   <div
                     class="username"
-                    :style="getUsernameStyle(message.username)"
+                    :style="getusernameStyle(message.username)"
                   >
                     {{ message.username || 'Unknown' }}
                   </div>
@@ -75,8 +75,6 @@
 
 <script>
 import * as Ably from 'ably';
-import * as nacl from 'tweetnacl';
-import * as naclUtil from 'tweetnacl-util';
 
 export default {
   name: 'Chat',
@@ -85,7 +83,7 @@ export default {
       activeSection: 'users-section',
       users: [],
       loading: false,
-      loggedInUsername: localStorage.getItem('username')?.trim() || null,
+      loggedInusername: localStorage.getItem('username')?.trim() || null,
       inputMessage: '',
       messages: [],
       warningMessage: '',
@@ -93,11 +91,7 @@ export default {
       username: localStorage.getItem('username')?.trim() || 'Unknown',
       userColors: {},
       ably: null,
-      channel: null,
-      keyPair: null,
-      publicKeyBase64: '',
-      privateKeyBase64: '',
-      peerPublicKeys: {} // username: publicKeyBase64
+      channel: null
     };
   },
   methods: {
@@ -112,10 +106,10 @@ export default {
           headers: { 'Content-Type': 'application/json' }
         });
         const users = await response.json();
-        const addedUsernames = new Set();
+        const addedusernames = new Set();
         this.users = users.filter(user => {
-          if (addedUsernames.has(user.username)) return false;
-          addedUsernames.add(user.username);
+          if (addedusernames.has(user.username)) return false;
+          addedusernames.add(user.username);
           return true;
         });
       } catch (error) {
@@ -125,14 +119,14 @@ export default {
       }
     },
     handleUserClick(user) {
-      if (user.username !== this.loggedInUsername) {
+      if (user.username !== this.loggedInusername) {
         localStorage.setItem('chatWith', user.username);
         localStorage.setItem('chatWithId', user.id);
         localStorage.setItem('profileImage', user.profile_picture || 'default-pfp.jpg');
         window.location.href = `https://latestnewsandaffairs.site/public/react.html`;
       }
     },
-    getColorForUsername(name) {
+    getColorForusername(name) {
       if (!this.userColors[name]) {
         const colors = [
           '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
@@ -143,8 +137,8 @@ export default {
       }
       return this.userColors[name];
     },
-    getUsernameStyle(username) {
-      if (username === 'USERNAME99') {
+    getusernameStyle(username) {
+      if (username === 'username99') {
         return {
           backgroundColor: '#000',
           color: '#fff',
@@ -157,15 +151,19 @@ export default {
       }
       return {
         fontWeight: 'bold',
-        color: this.getColorForUsername(username)
+        color: this.getColorForusername(username)
       };
     },
-    async fetchPeerPublicKey(username) {
-      // TODO: fetch peer's public key from backend
-      // For demo, just return localStorage.getItem('publicKey')
-      return localStorage.getItem('publicKey');
+    appendMessage(text, username, id) {
+      if (this.sentMessages.has(id)) return;
+      this.messages.push({ text, username, id });
+      this.sentMessages.add(id);
+      this.$nextTick(() => {
+        const messagesContainer = this.$el.querySelector('#messages');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      });
     },
-    async sendMessage() {
+    sendMessage() {
       const message = this.inputMessage.trim();
       this.warningMessage = '';
       if (!this.username || this.username === 'Unknown') {
@@ -173,82 +171,30 @@ export default {
         return;
       }
       if (message) {
-        // --- ENCRYPT MESSAGE ---
-        const peerUsername = 'recipient'; // TODO: set real recipient
-        const peerPublicKeyBase64 = await this.fetchPeerPublicKey(peerUsername);
-        const nonce = nacl.randomBytes(nacl.box.nonceLength);
-        const messageUint8 = naclUtil.decodeUTF8(message);
-        const peerPublicKey = naclUtil.decodeBase64(peerPublicKeyBase64);
-        const myPrivateKey = naclUtil.decodeBase64(this.privateKeyBase64);
-        const encrypted = nacl.box(messageUint8, nonce, peerPublicKey, myPrivateKey);
-        const encryptedBase64 = naclUtil.encodeBase64(encrypted);
-        const nonceBase64 = naclUtil.encodeBase64(nonce);
-        // Send encrypted message
         const messageId = Date.now() + Math.random();
-        this.appendMessage('[encrypted]', this.username, messageId);
+        this.appendMessage(message, this.username, messageId);
         if (this.channel) {
           this.channel.publish('new-message', {
-            text: encryptedBase64,
+            text: message,
             id: messageId,
-            username: this.username,
-            nonce: nonceBase64,
-            senderPublicKey: this.publicKeyBase64
+            username: this.username
           });
         }
         this.inputMessage = '';
       }
-    },
-    appendMessage(text, username, id, nonce, senderPublicKey) {
-      // Try to decrypt if encrypted
-      if (text && nonce && senderPublicKey) {
-        try {
-          const nonceUint8 = naclUtil.decodeBase64(nonce);
-          const encryptedUint8 = naclUtil.decodeBase64(text);
-          const senderPubKeyUint8 = naclUtil.decodeBase64(senderPublicKey);
-          const myPrivKeyUint8 = naclUtil.decodeBase64(this.privateKeyBase64);
-          const decrypted = nacl.box.open(encryptedUint8, nonceUint8, senderPubKeyUint8, myPrivKeyUint8);
-          if (decrypted) {
-            text = naclUtil.encodeUTF8(decrypted);
-          } else {
-            text = '[decryption failed]';
-          }
-        } catch (e) {
-          text = '[decryption error]';
-        }
-      }
-      if (this.sentMessages.has(id)) return;
-      this.messages.push({ text, username, id });
-      this.sentMessages.add(id);
-      this.$nextTick(() => {
-        const messagesContainer = this.$el.querySelector('#messages');
-        if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      });
     }
   },
   mounted() {
     this.fetchUsers();
-    // --- E2E ENCRYPTION KEY GENERATION ---
-    let priv = localStorage.getItem('privateKey');
-    let pub = localStorage.getItem('publicKey');
-    if (!priv || !pub) {
-      const keyPair = nacl.box.keyPair();
-      priv = naclUtil.encodeBase64(keyPair.secretKey);
-      pub = naclUtil.encodeBase64(keyPair.publicKey);
-      localStorage.setItem('privateKey', priv);
-      localStorage.setItem('publicKey', pub);
-    }
-    this.privateKeyBase64 = priv;
-    this.publicKeyBase64 = pub;
-    // TODO: send publicKeyBase64 to backend for user profile
     // Initialize Ably
     this.ably = new Ably.Realtime('9frHeA.Si13Zw:KVzVyovw6hCu4RRuy6P11Tyl0h7MJIzv2Q_n4YgbNnE'); // Replace with your Ably API key
     this.ably.connection.on('connected', () => {
       console.log('Connected to Ably');
       this.channel = this.ably.channels.get('chat-room');
       this.channel.subscribe('new-message', (msg) => {
-        const { text, id, username, nonce, senderPublicKey } = msg.data;
+        const { text, id, username } = msg.data;
         if (!this.sentMessages.has(id)) {
-          this.appendMessage(text, username, id, nonce, senderPublicKey);
+          this.appendMessage(text, username, id);
         }
       });
     });
@@ -275,41 +221,35 @@ export default {
     width: 100%;          /* Ensure full width */
     box-sizing: border-box; /* Ensure padding doesn't increase height */
 }
-.user-card {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  margin: 20px 0;
-  background: linear-gradient(to bottom right, #111827, #581c87);
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+ .username {
+    font-size: 13px;
+    cursor: pointer;
+  }
+      .user-card{
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  .profile-picture img {width: 29px;
+  height: 29px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.3s;
-  border-bottom: 2px solid #581c87;
-  gap: 20px;
-}
-.profile-picture img {
-  width: 30px;
-  height: 30px;
-  border-radius: 30%;
-  margin-right: 20px;
   object-fit: cover;
 }
-.username {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #fff;
-}
 @media (max-width: 768px) {
-    .user-card {
+    .user-card{
     padding: 9px 12px;
+    cursor: pointer;
   }
-  .profile-picture img {
-    width: 40px;
-    height: 40px;
-  }
+  .profile-picture img {width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  cursor: pointer;
+  object-fit: cover;
+  cursor: pointer;
+}
   .username {
-    font-size: 0.9rem;
+    font-size: 13px;
+    cursor: pointer;
   }
 }
 #messages {
@@ -337,6 +277,7 @@ export default {
     padding: 16px; /* Reduced from 15px */
     background: rgba(245, 245, 245, 0.9);
     border-top: 1px solid rgba(0, 0, 0, 0.05);
+   
 }
 #input-message {
     width: 80%; /* Reduced from 70% */
