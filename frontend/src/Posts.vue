@@ -176,8 +176,8 @@
           </button>
           <button class="comment-btn" @click="toggleComments(post._id)" style="color:#ff1100;">Comments ({{ post.comments?.length || 0 }} )</button>
           <button class="view-btn">💫 ({{ post.views || 0 }})</button>
-          <button v-if="post.username === loggedInUsername || post.sessionId === sessionId" @click="editPost(post._id, post.username)">Edit</button>
-          <button v-if="post.username === loggedInUsername || post.sessionId === sessionId" @click="deletePost(post._id)">Delete</button>
+<button v-if="post.username === loggedInUsername || post.sessionId === sessionId" @click="editPost(post._id, post.username)">Edit</button>
+<button v-if="post.username === loggedInUsername || post.sessionId === sessionId" @click="deletePost(post._id)">Delete</button>
         </div>
       </div> <!-- ✅ Closes v-for post-card -->
     </div> <!-- ✅ Closes #posts -->
@@ -212,22 +212,21 @@ export default {
     const imagePreview = ref(null);
     const imageData = ref(null);
     const lastSentPostId = ref(null);
-    const loggedInUsername = ref(localStorage.getItem('username') || 'Unknown');
-     const sessionId = ref(null);
+    const loggedInUsername = ref(localStorage.getItem('username') || 'Guest');
+   const sessionId = ref(localStorage.getItem('sessionId') || null);
     const showModal = ref(false);
     const modalMessage = ref('');
     const modalAction = ref(null);
     const modalActionText = ref('');
 
     const ably = new Ably.Realtime('eCkrsA.JzcmYQ:JLywAltPtm-KWD6Rd0MItQRgi-I4R7zn6BpI1UVQ3Eg'); // Replace with your actual Ably API key
-
-    // Get channel for real-time updates
-    const channel = ably.channels.get('posts-channel');
     
-       const generateSessionId = () => {
+    const generateSessionId = () => {
       return Math.random().toString(36).substring(2, 15) +
              Math.random().toString(36).substring(2, 15);
     };
+    // Get channel for real-time updates
+    const channel = ably.channels.get('posts-channel');
 
     // Fetch posts
     const fetchPosts = async (page = 1, sort = 'newest') => {
@@ -839,16 +838,14 @@ onMounted(() => {
   loadMorePosts();
   window.addEventListener('scroll', handleScroll);
 
-  // Ensure session ID exists
-  const existingId = localStorage.getItem('sessionId');
-  if (!existingId) {
+  const savedSessionId = localStorage.getItem('sessionId');
+  if (savedSessionId) {
+    sessionId.value = savedSessionId;
+  } else {
     const newId = generateSessionId();
     localStorage.setItem('sessionId', newId);
     sessionId.value = newId;
-  } else {
-    sessionId.value = existingId;
   }
-
   // Subscribe to Ably channels
   channel.subscribe('newOpinion', message => {
     const incomingPost = message.data;
@@ -886,7 +883,6 @@ onMounted(() => {
   window.vueInstance = { addReply };
 });
 
-
     onUnmounted(() => {
       window.removeEventListener('scroll', handleScroll);
       // Unsubscribe from Ably channels if needed
@@ -899,6 +895,7 @@ onMounted(() => {
       sortOption,
       postText,
       imagePreview,
+      loggedInUsername, 
       sortPosts,
       showUserProfile,
       formatTimestamp,
@@ -963,7 +960,7 @@ body{
     width: 100%;
     height: 100%;
   background-color: #000;
-    z-index: 1000;
+    z-index: 12;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -1030,5 +1027,67 @@ body{
   box-shadow: 0 0 12px #ff00cc;
 }
 
+/* Modal Wrapper */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11;
+}
+/* Modal Box */
+.modal-content {
+  background: #1a1a1a;
+  padding: 20px;
+  width: 280px;
+  border-radius: 14px 10px 14px 10px;
+  color: #e0fefc;
+  text-align: center;
+  box-shadow: 0 0 12px rgba(0, 255, 224, 0.2);
+  border: 1px solid #2e2e2e;
+}
+/* Button Container */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+/* Shared Button Styles */
+.modal-actions button {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: 0.3s ease all;
+}
+/* Cancel (Red) */
+.modal-actions .modal-cancel {
+  color: #ff4d4f;
+  background: #121212;
+  border-color: #ff4d4f;
+}
+.modal-actions .modal-cancel:hover {
+  background: #aa0000;
+  color: #fff;
+  box-shadow: 0 0 6px rgba(255, 77, 79, 0.4);
+}
+/* Confirm (Neon Cyan) */
+.modal-actions .modal-confirm {
+  color: #00ffe0;
+  background: #121212;
+  border-color: #00ffe0;
+}
+.modal-actions .modal-confirm:hover {
+  background: linear-gradient(135deg, #00ffe0, #00bfff);
+  color: #000;
+  box-shadow: 0 0 6px rgba(0, 255, 224, 0.4);
+}
 </style>
+
 
