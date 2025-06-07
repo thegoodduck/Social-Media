@@ -7,13 +7,13 @@
 body {
       padding: 10px; /* Optional: Add padding to the body */
     margin: 0;
-    font-family: Arial, sans-serif;
+   font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: flex;
     flex-direction: column;
     justify-content: flex-start;
       align-items: stretch;
   background-color: #000;
-  color: #fff;
+  color: #ffffff;
 }
 body .dark-mode {
   background:linear-gradient(to bottom right,#111827,#581c87);;
@@ -43,8 +43,8 @@ header {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 30;
-      border-bottom: 2px solid #e64a3c;
+  z-index: 6;
+  border-bottom: 2px solid #581c87
 }
 header .user-section .search-dropdown input {
   border-radius: 9999px;
@@ -62,7 +62,7 @@ header .user-section .search-dropdown input {
 .dark-mode .button,
 .dark-mode .card,
 .dark-mode .form-control {
-  border-color: #4b5563;
+  border-color: orangered;
   background: linear-gradient(to bottom right, #111827, #581c87);
   color: #f3f4f6;
 }
@@ -75,7 +75,7 @@ nav {
   padding: 7px;
   background-color: #000;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 10;
+  z-index: 7;
 }
 nav ul {
   display: flex;
@@ -103,10 +103,11 @@ main {
 }
 /* Post & Movie Card Styling */
 .post-card, .movie-card {
-    font-size: 13px;
+    font-size: 12px;
  background-color: #000; /* Fixed */
     color: white; /* Light text color */
     padding: 14px;
+     font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     border-radius: 15px;
     margin: 0 0 15px 0; /* Remove left and right margin, keep bottom margin */
     width: 100%; /* Ensure the card takes the full width */
@@ -134,7 +135,7 @@ main {
     border: 1px solid #ff6f61; /* Stylish border */
     color: #ff1100;
     cursor: pointer;
-    font-size: 10px; /* Reduced font size for smaller buttons */
+    font-size: 9.6px; /* Reduced font size for smaller buttons */
     padding: 4px 8px; /* Reduced padding for compact buttons */
     border-radius: 5px; /* Rounded corners */
     min-width: 50px; /* Prevent buttons from becoming too small */
@@ -147,10 +148,9 @@ main {
     .movie-card .actions {
         justify-content: flex-start;
     }
-
     .post-card button,
     .movie-card button {
-        font-size: 9px;
+        font-size: 9.1px;
         padding: 3px 6px;
         min-width: 40px;
     }
@@ -184,8 +184,7 @@ main {
 .chat-section h2,
 .settings-section h2,
 .video-modal h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 12px;
   margin: 0 0 8px;
 }
 .video-card h3 {
@@ -252,7 +251,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 20;
+  z-index: 8;
 }
 .video-modal .modal-content {
   background: #fff;
@@ -269,51 +268,8 @@ main {
   height: 320px;
   border-radius: 8px;
 }
-
 .chat-section button {
   border-radius: 0 8px 8px 0;
-}
-.settings-section button {
-  width: 100%;
-}
-/* Settings Section */
-.settings-section .options {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-.settings-section .option {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.settings-section .option span {
-  font-weight: 500;
-}
-.dark-mode .settings-section .option span {
-  color: #f3f4f6;
-}
-.settings-section .toggle .slider {
-  width: 44px;
-  height: 24px;
-  background: #d1d5db;
-  border-radius: 9999px;
-}
-.settings-section .toggle input:checked + .slider {
-  background: #14b8a6;
-}
-.settings-section .toggle .slider::before {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background: #fff;
-  border-radius: 50%;
-  left: 2px;
-  top: 2px;
-}
-.settings-section .toggle input:checked + .slider::before {
-  transform: translateX(20px);
 }
     .loading {
     display: flex;
@@ -329,10 +285,12 @@ main {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* Timestamp Styling */
 .post-timestamp,
 .movie-timestamp {
     font-size: 12px;
@@ -356,28 +314,88 @@ button  {
     font-size: 12px; /* Smaller font size */
     transition: background-color 0.3s ease;
 }
-button:hover {
-    background-color: #45a049;
-}
-/* Tabs */
+/* Tabs Container */
 .tabs {
   display: flex;
-    justify-content: space-between;
-    gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
 }
+/* Tab Buttons */
 .tabs button {
-    padding: 8px 18px;
-    background-color: transparent;
-       border-bottom: 2px solid #ff6f61;
-    font-size: 16px;
-    color: #ff6f61;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.3s ease, border-bottom 0.3s ease;
+  padding: 6px 14px;                     /* Smaller padding */
+  background-color: #1a1a1a;
+  border: 2px solid transparent;
+  border-radius: 18px 18px 18px 18px;     /* Twisted capsule shape */
+  color: #00ffe0;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
-/* Initially, only the active section is visible */
-.tabs button.active,
+/* Hover */
 .tabs button:hover {
-    display: none;
-    display: block;
+  background: linear-gradient(135deg, #00ffe0, #00bfff);
+  color: #000;
+  box-shadow: 0 0 8px #00ffe0;
+  border-color: #00ffe0;
 }
+/* Active Tab */
+.tabs button.active {
+  background: linear-gradient(135deg, #ff00cc, #3333ff);
+  color: #fff;
+  border-color: #ff00cc;
+  box-shadow: 0 0 10px #ff00cc;
+}
+.image-preview-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 15px;
+}
+.image-preview-container img {
+  max-width: 300px;
+  max-height: 280px;
+  border-radius: 10px;
+  display: block;
+}
+.remove-image-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background-color: #4caf50;
+    color: #ffffff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease, top 0.3s ease;
+    z-index: 9;
+    pointer-events: none; /* <- key fix */
+}
+.notification.show-notification {
+    opacity: 1;
+    top: 30px;
+    pointer-events: auto; /* allow interaction only when shown */
+}
+.notification.error-notification {
+    background-color: #f44336;
+}
+
