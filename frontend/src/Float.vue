@@ -29,6 +29,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import Ably from 'ably';
 
 // User info from localStorage
 const loggedInUsername = ref(localStorage.getItem('username') || '');
