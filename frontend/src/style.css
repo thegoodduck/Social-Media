@@ -47,7 +47,7 @@ header {
   border-bottom: 2px solid #581c87
 }
 header .user-section .search-dropdown input {
-  border-radius: 9999px;
+  border-radius: 9px;
 }
 .dark-mode header,
 .dark-mode body,
@@ -130,7 +130,8 @@ main {
     align-items: center;
 }
 .post-card button,
-.movie-card button {
+.movie-card button,
+.actions button {
     background-color: transparent;
     border: 1px solid #ff6f61; /* Stylish border */
     color: #ff1100;
@@ -398,4 +399,5 @@ button  {
 .notification.error-notification {
     background-color: #f44336;
 }
+
 
