@@ -19,6 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('backendvid.urls')),
-    
+    path('', include('backendvid.urls')),  # Expose all backendvid endpoints at root
+    path('api/', include('backendvid.urls')),  # (optional) keep /api/ prefix for compatibility
 ]
