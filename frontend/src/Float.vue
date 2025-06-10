@@ -14,12 +14,24 @@
         </div>
         <div class="panel-content">
               <!-- Post Input Form -->
-    <div class="post-input">
-      <textarea v-model="postText" id="postText" placeholder="What's your opinion?"></textarea>
-      <input type="file" id="file-input" accept="image/*" @change="handleImageUpload" />
-      <img v-if="imagePreview" :src="imagePreview" id="image-preview" alt="Image Preview" />
-      <button id="submitBtn" @click="postOpinion">Post Opinion</button>
-    </div>
+<div class="post-input">
+  <!-- Wrapper for textarea and icon -->
+  <div class="textarea-wrapper">
+    <textarea v-model="postText" id="postText" placeholder="What's your opinion?"></textarea>
+
+    <!-- Icon label inside the right of textarea -->
+    <label for="file-input" class="file-upload-icon">
+      <i class="fas fa-image"></i>
+    </label>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="file-input" accept="image/*" @change="handleImageUpload" hidden />
+
+  <img v-if="imagePreview" :src="imagePreview" id="image-preview" alt="Image Preview" />
+
+  <button id="submitBtn" @click="postOpinion">Post Opinion</button>
+</div>
 
         </div>
       </div>
@@ -29,7 +41,6 @@
 
 <script setup>
 import { ref } from 'vue';
-import Ably from 'ably';
 
 // User info from localStorage
 const loggedInUsername = ref(localStorage.getItem('username') || '');
@@ -187,7 +198,6 @@ const resetForm = () => {
   });
 </script>
 
-
 <style scoped>
 .floating-circle {
   position: fixed;
@@ -203,7 +213,7 @@ const resetForm = () => {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  z-index: 1001;
+  z-index: 14;
   cursor: pointer;
   transition: transform 0.3s ease;
 }
@@ -218,7 +228,7 @@ const resetForm = () => {
   left: 0%;
   top: 8.5%;
   background-color: #000;
-  z-index: 1002;
+  z-index: 13;
   box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.15);
   padding: 20px;
   display: flex;
@@ -247,27 +257,44 @@ const resetForm = () => {
 .slide-up-enter-from, .slide-up-leave-to {
   transform: translateY(100%);
 }
+.textarea-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+#postText {
+  width: 100%;
+  padding-right: 40px; /* Make space for icon */
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 80px;
+}
 /* Post Input Form */
 .post-input {
   margin-bottom: 20px;
 }
 .post-input {
   margin-bottom: 20px;
-  background: #222;
+  background: #000;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 20px; /* More rounded corners */
   color: #fff;
   font-family: sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Optional: for a softer UI */
+  border: 1px solid #333; /* Optional: for a subtle border */
 }
+
+/* Optional: If there are input or textarea fields inside */
+.post-input input,
 .post-input textarea {
   width: 100%;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #444;
-  background-color: #333;
+  padding: 12px 16px;
+  border-radius: 15px;
+  border: none;
+  outline: none;
+  background: #111;
   color: #fff;
-  font-size: 14px;
-  resize: vertical;
-  margin-bottom: 15px;
+  font-size: 1rem;
 }
+
 </style>
