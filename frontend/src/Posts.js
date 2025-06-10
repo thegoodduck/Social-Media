@@ -38,8 +38,9 @@ export default function usePosts() {
     const ably = new Ably.Realtime('eCkrsA.JzcmYQ:JLywAltPtm-KWD6Rd0MItQRgi-I4R7zn6BpI1UVQ3Eg'); // Replace with your actual Ably API key
     
     const generateSessionId = () => {
-      return Math.random().toString(36).substring(2, 15) +
-             Math.random().toString(36).substring(2, 15);
+      const array = new Uint8Array(16); // 16 bytes = 128 bits
+      window.crypto.getRandomValues(array);
+      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     };
 
     // Get channel for real-time updates
