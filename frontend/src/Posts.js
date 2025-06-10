@@ -1,5 +1,5 @@
 // Posts.js
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import Ably from 'ably';
 
 export default function usePosts() {
@@ -12,13 +12,28 @@ export default function usePosts() {
   const imagePreview = ref(null);
   const imageData = ref(null);
   const lastSentPostId = ref(null);
-  const loggedInUsername = ref(localStorage.getItem('username') || 'Guest');
+  const loggedInUsername = ref(localStorage.getItem('username') || '');
+  const userId = ref(localStorage.getItem('userId') || '');
   const sessionId = ref(localStorage.getItem('sessionId') || null);
   const showModal = ref(false);
   const modalMessage = ref('');
   const modalAction = ref(null);
   const modalActionText = ref('');
-  const selectedPost = ref(null);
+  const selectedPost = ref(null);    // Authentication computed properties
+
+  const isAuthenticated = computed(() => {
+    return loggedInUsername.value && 
+           loggedInUsername.value.trim() !== '' && 
+           loggedInUsername.value !== 'Guest';
+  });
+
+  const requireAuth = (action = 'perform this action') => {
+    if (!isAuthenticated.value) {
+      showNotification(`Please log in to ${action}`, true);
+      return false;
+    }
+    return true;
+  };
 
     const ably = new Ably.Realtime('eCkrsA.JzcmYQ:JLywAltPtm-KWD6Rd0MItQRgi-I4R7zn6BpI1UVQ3Eg'); // Replace with your actual Ably API key
     
@@ -195,6 +210,7 @@ export default function usePosts() {
 
     // Like post
     const likePost = async postId => {
+        if (!requireAuth('like posts')) return;
       const post = posts.value.find(p => p._id === postId);
       if (!post) return;
       const likedBy = post.likedBy || [];
@@ -239,6 +255,7 @@ export default function usePosts() {
 
     // Dislike post
     const dislikePost = async postId => {
+        if (!requireAuth('dislike posts')) return;
       const post = posts.value.find(p => p._id === postId);
       if (!post) return;
       const likedBy = post.likedBy || [];
@@ -306,6 +323,7 @@ export default function usePosts() {
 
     // Add comment
     const addComment = async postId => {
+      if (!requireAuth('add comments')) return;
       const input = document.getElementById(`commentInput-${postId}`);
       const commentText = input.value.trim();
       if (!commentText) return;
@@ -391,6 +409,7 @@ export default function usePosts() {
 
     // Add reply
     const addReply = async (postId, commentId, replyText, replyUsername) => {
+        if (!requireAuth('add replies')) return;
       if (!replyText.trim()) {
         console.error('Reply cannot be empty');
         return;
@@ -437,6 +456,7 @@ export default function usePosts() {
 
     // Like comment
     const likeComment = async (postId, commentId, commentUsername) => {
+        if (!requireAuth('like comments')) return;
       const post = posts.value.find(p => p._id === postId);
       if (!post) return;
       const comment = post.comments.find(c => c.commentId === commentId);
@@ -485,6 +505,7 @@ export default function usePosts() {
 
     // Like reply
     const likeReply = async (postId, commentId, replyId) => {
+        if (!requireAuth('like replies')) return;
       const post = posts.value.find(p => p._id === postId);
       if (!post) return;
       const comment = post.comments.find(c => c.commentId === commentId);
@@ -536,6 +557,7 @@ export default function usePosts() {
 
     // Edit post
     const editPost = (postId, postUsername) => {
+       if (!requireAuth('edit posts')) return;
       if (postUsername !== loggedInUsername.value) {
         showNotification('You can only edit your own posts.', true);
         return;
@@ -576,6 +598,7 @@ export default function usePosts() {
 
     // Delete post
     const deletePost = postId => {
+       if (!requireAuth('delete posts')) return;
       modalMessage.value =
         'Are you sure you want to delete this post? This action cannot be undone.';
       modalAction.value = () => confirmDeletePost(postId);
@@ -609,7 +632,9 @@ export default function usePosts() {
 
     // Delete comment
     const deleteComment = (postId, commentId) => {
+  if (!requireAuth('delete comments')) return;
       modalMessage.value =
+
         'Are you sure you want to delete this comment? This action cannot be undone.';
       modalAction.value = () => confirmDeleteComment(postId, commentId);
       modalActionText.value = 'Delete';
@@ -722,6 +747,9 @@ export default function usePosts() {
     });
 
     return {
+      isAuthenticated,
+      userId,
+      requireAuth,
       posts,
       sessionId,
       loading,
@@ -753,4 +781,5 @@ export default function usePosts() {
       selectedPost,
     };
 };
+
 
