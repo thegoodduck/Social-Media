@@ -1,0 +1,4 @@
+videos/
+*.mp4
+__pycache__
+Pulse_Backend_Video/pulse/db.sqlite3
