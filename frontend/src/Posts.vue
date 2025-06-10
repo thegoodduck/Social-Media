@@ -8,22 +8,44 @@
     </div>
     <div id="posts" class="posts-feed">
       <div v-for="post in posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])" :data-disliked-by="JSON.stringify(post.dislikedBy || [])">
-        <div class="post-header">
-    <div class="profile-picture" @click="redirectToUserProfile(post.username)">
-      <img :src="post.profilePicture || 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" />
-    </div>
-    <div class="username" @click="redirectToUserProfile(post.username)">
-      <strong>{{ post.username }}</strong>
-    </div>
+       <div class="post-header">
+  <div class="profile-picture" @click="redirectToUserProfile(post.username)">
+    <img :src="post.profilePicture || 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" />
   </div>
+  <div class="username" @click="redirectToUserProfile(post.username)">
+    <strong>{{ post.username }}</strong>
+    <span class="verified-badge" title="Verified">
+      <i class="fa-solid fa-circle-check"></i>
+    </span>
+  </div>
+</div>
+
         <p class="post-message" style="font-size: 13px; margin-top: 8px; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; cursor: pointer;" @click="openFullScreenPost(post._id)">{{ post.message || "" }}</p>
         <img v-if="post.photo" :src="post.photo" alt="Post Image" style="width: 100%; max-width:300px; max-height:280px; border-radius: 10px; margin-bottom: 10px; cursor: pointer;" @click="openFullScreenPost(post._id)" />
         <div class="post-timestamp"><small>{{ formatTimestamp(post.timestamp) }}</small></div>
         <div class="actions">
-          <button class="like-btn" :class="{ liked: post.likedBy?.includes(loggedInUsername) }" @click="likePost(post._id)">👍 {{ post.likes || 0 }}</button>
-          <button class="dislike-btn" :class="{ disliked: post.dislikedBy?.includes(loggedInUsername) }" @click="dislikePost(post._id)">👎 {{ post.dislikes || 0 }}</button>
-          <button class="comment-btn" @click="openFullScreenPost(post._id)" style="color:#ff1100;">Comments ({{ post.comments?.length || 0 }})</button>
-          <button class="view-btn">💫 ({{ post.views || 0 }})</button>
+<button class="like-btn" :class="{ liked: post.likedBy?.includes(loggedInUsername) }" @click="likePost(post._id)" style="border: none;">
+  <svg class="thumbs-up-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+    <path d="M1 21h4V9H1v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32a1 1 0 0 0-.29-.7L14 2 7.59 8.41A1.98 1.98 0 0 0 7 9.83V19a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2l1-7v-.01L23 10z"/>
+  </svg>
+  {{ post.likes || 0 }}
+</button>
+
+  <button class="dislike-btn" :class="{ disliked: post.dislikedBy?.includes(loggedInUsername) }" @click="dislikePost(post._id)" style="border: none;">
+  <svg class="thumbs-down-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+    <path d="M1 3h4v12H1V3zm22 11c0 1.1-.9 2-2 2h-6.31l.95 4.57.03.32a1 1 0 0 1-.29.7L14 22l-6.41-6.41A1.98 1.98 0 0 1 7 14.17V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2l1 7v.01L23 14z"/>
+  </svg>
+  {{ post.dislikes || 0 }}
+</button>
+
+<button class="comment-btn" @click="openFullScreenPost(post._id)" style="color:#ff1100;max-height:40px;margin: 0%;border: none;padding: 0%;">
+  <svg class="round comments" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style=" display: inline-flex; align-items: center;justify-content: center;margin-bottom: 10px;">
+    <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
+  </svg>
+  ({{ post.comments?.length || 0 }})
+</button>
+
+          <button class="view-btn" style="border: none; font-size: 12px;">💫 ({{ post.views || 0 }})</button>
           <button v-if="post.username === loggedInUsername || post.sessionId === sessionId" @click="editPost(post._id, post.username)">Edit</button>
           <button v-if="post.username === loggedInUsername || post.sessionId === sessionId" @click="deletePost(post._id)">Delete</button>
         </div>
@@ -148,192 +170,8 @@ const {
   sessionId,
 } = usePosts();
 </script>
+<style src="./Posts.css"></style>
 
-
-<style scoped>
-.full-screen-post-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  justify-content: center;
-  z-index: 1000;
-  overflow-y: auto;
-}
-
-.full-screen-post-content {
-  background: #000;
-  width: 90%;
-  border-radius: 10px;
-  padding: 20px;
-  position: relative;
-  overflow-y: auto;
-}
-.close-full-screen-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: #222;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease;
-}
-
-.close-full-screen-btn:hover {
-  background: #444;
-}
-
-body{
-   font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-.post-header {
-  display: flex;
-  align-items: center;
-  padding: 5px 10px;
-}
-.post-header .profile-picture img {
-  width: 29px;
-  height: 29px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.post-header .username {
-  font-size: 14px;
-   margin-left: 15px;
-   margin-bottom: 5px;
-}
-.post-message {
-  font-size: 14px;
-  margin-top: 8px;
-}
-.post-card img {
-  width: 100%;
-  max-width: 300px;
-  max-height: 280px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-.comment .like-comment-btn,
-.comment .reply-btn,
-.comment .delete-comment-btn {
-  background: none;
-  border: none;
-  color: #ccc;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 4px 8px;
-  transition: color 0.2s;
-}
-.comment button:hover {
-  color: #fff;
-}
-  #sort-options {
-       display: flex;
-  justify-content: center; /* Center buttons */
-        margin-bottom: 20px;
-        padding-left: 8%; /* 8% gap at the start */
-        padding-right: 8%; /* 8% gap at the end */
-          max-width: 800px; 
-    }
-.sort-button {
-  padding: 6px 18px;
-  border: 2px solid #44444432; /* Subtle dark border */
-  border-radius: 30px; /* Fully rounded pill shape */
-  background-color: #1a1a1a; /* Dark gray button base */
-  color: #00ffe0; /* Neon cyan text */
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sort-button:hover {
-  background: linear-gradient(135deg, #00ffe0, #00bfff); /* Neon cyan to sky blue */
-  color: #000; /* Contrast text */
-  border-color: #00ffe0;
-  box-shadow: 0 0 10px #00ffe0;
-}
-
-.sort-button.active {
-  background: linear-gradient(135deg, #ff00cc, #3333ff); /* Magenta to neon blue */
-  color: #fff;
-  border-color: #ff00cc;
-  box-shadow: 0 0 12px #ff00cc;
-}
-
-/* Modal Wrapper */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 11;
-}
-/* Modal Box */
-.modal-content {
-  background: #1a1a1a;
-  padding: 20px;
-  width: 280px;
-  border-radius: 14px 10px 14px 10px;
-  color: #e0fefc;
-  text-align: center;
-  box-shadow: 0 0 12px rgba(0, 255, 224, 0.2);
-  border: 1px solid #2e2e2e;
-}
-/* Button Container */
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-/* Shared Button Styles */
-.modal-actions button {
-  flex: 1;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 12px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: 0.3s ease all;
-}
-/* Cancel (Red) */
-.modal-actions .modal-cancel {
-  color: #ff4d4f;
-  background: #121212;
-  border-color: #ff4d4f;
-}
-.modal-actions .modal-cancel:hover {
-  background: #aa0000;
-  color: #fff;
-  box-shadow: 0 0 6px rgba(255, 77, 79, 0.4);
-}
-/* Confirm (Neon Cyan) */
-.modal-actions .modal-confirm {
-  color: #00ffe0;
-  background: #121212;
-  border-color: #00ffe0;
-}
-.modal-actions .modal-confirm:hover {
-  background: linear-gradient(135deg, #00ffe0, #00bfff);
-  color: #000;
-  box-shadow: 0 0 6px rgba(0, 255, 224, 0.4);
-}
-</style>
 
 
 
