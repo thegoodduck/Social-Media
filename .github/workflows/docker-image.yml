@@ -17,7 +17,7 @@ jobs:
             image: frontend
           - context: backend
             image: backend
-          - context: vidbackend/Pulse_Backend_Video/pulse/backendvid
+          - context: vidbackend
             image: backendvid
 
     steps:
