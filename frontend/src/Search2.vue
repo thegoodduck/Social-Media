@@ -102,6 +102,22 @@
           {{ actionLoading ? 'Loading...' : getFriendButtonText() }}
         </button>
       </div>
+        
+      <!-- Chat Button -->
+<button
+  @click="startChat"
+  style="
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+  "
+>
+  Message
+</button>
 
       <!-- Relationship Stats -->
       <div class="relationship-stats" style="margin: 10px 0; display: flex; justify-content: center; gap: 20px; font-size: 12px; color: #aaa;">
@@ -243,10 +259,12 @@ import { ref, onMounted, watch } from 'vue';
 import { debounce } from 'lodash';
 import { useRoute, useRouter } from 'vue-router';
 import usePosts from './Posts.js';
+import { inject } from 'vue'
 
+const notify = inject('notify')
 const router = useRouter();
 const route = useRoute();
-
+const userId = ref(localStorage.getItem('userId') || '');
 const username = ref(route.params.username ?? '');
 const searchQuery = ref(route.params.username ?? '');
 const userProfile = ref(null);
@@ -312,13 +330,13 @@ const toggleFollow = async () => {
     await fetchUserData(userProfile.value.username);
 
     if (relationshipStatus.value.isFollowing) {
-      showNotification('Successfully followed user', false);
+     notify('Successfully followed user', false);
     } else {
-      showNotification('Successfully unfollowed user', false);
+     notify('Successfully unfollowed user', false);
     }
   } catch (error) {
     console.error('Error toggling follow:', error);
-    showNotification('Failed to update follow status', true);
+   notify('Failed to update follow status', true);
   } finally {
     actionLoading.value = false;
   }
@@ -366,26 +384,26 @@ const toggleFriendship = async () => {
     switch (relationshipStatus.value.friendshipStatus) {
       case 'none':
         relationshipStatus.value.friendshipStatus = 'pending_sent';
-        showNotification('Friend request sent', false);
+       notify('Friend request sent', false);
         break;
       case 'pending_sent':
         relationshipStatus.value.friendshipStatus = 'none';
-        showNotification('Friend request cancelled', false);
+       notify('Friend request cancelled', false);
         break;
       case 'pending_received':
         relationshipStatus.value.friendshipStatus = 'friends';
-        showNotification('Friend request accepted', false);
+       notify('Friend request accepted', false);
         break;
       case 'friends':
         relationshipStatus.value.friendshipStatus = 'none';
-        showNotification('Friend removed', false);
+       notify('Friend removed', false);
         break;
     }
 
     await fetchUserData(userProfile.value.username);
   } catch (error) {
     console.error('Error toggling friendship:', error);
-    showNotification('Failed to update friendship status', true);
+   notify('Failed to update friendship status', true);
   } finally {
     actionLoading.value = false;
   }
@@ -455,7 +473,7 @@ const fetchUserData = async (usernameToFetch) => {
       if (response.status === 404) {
         userProfile.value = null;
         posts.value = [];
-        showNotification('User not found', true);
+       notify('User not found', true);
         return;
       }
       throw new Error('Failed to fetch user data');
@@ -465,9 +483,11 @@ const fetchUserData = async (usernameToFetch) => {
     searched.value = true;
 
     const user = data.user;
+  console.log('Fetched user data:', user);
 
     userProfile.value = {
       username: user.username,
+       userId: user.id,
       profilePicture: user.profile_picture,
       description: user.description,
       location: user.location,
@@ -497,7 +517,7 @@ const fetchUserData = async (usernameToFetch) => {
     searched.value = true;
     userProfile.value = null;
     posts.value = [];
-    showNotification(`Error: ${error.message}`, true);
+   notify(`Error: ${error.message}`, true);
   } finally {
     loading.value = false;
   }
@@ -505,7 +525,7 @@ const fetchUserData = async (usernameToFetch) => {
 
 const searchUser = debounce(() => {
   if (!searchQuery.value.trim()) {
-    showNotification('Please enter a username', true);
+   notify('Please enter a username', true);
     return;
   }
   router.push(`/user/${searchQuery.value.trim()}`);
@@ -557,10 +577,44 @@ watch(() => localStorage.getItem('username'), (newUsername) => {
     checkRelationshipStatus(userProfile.value.username);
   }
 });
-
 const showNotification = (message, isError) => {
   alert(`${isError ? 'Error' : 'Success'}: ${message}`);
 };
+
+const startChat = () => {
+  const user = userProfile.value;
+
+  if (!user || !user.username) {
+    notify('Cannot start chat: missing username.', true);
+    return;
+  }
+
+  const id = user.userId || user._id || null;
+
+  if (!id) {
+    notify('Cannot start chat: missing user ID.', true);
+    return;
+  }
+
+  const updates = {
+    chatWith: user.username,
+    chatWithId: id,
+    profileImage: user.profilePicture || 'default-pfp.jpg'
+  };
+
+  Object.entries(updates).forEach(([key, value]) => {
+    localStorage.setItem(key, value);
+  });
+
+  router.push({
+    name: 'Chatbox',
+    params: {
+       userId: id,  
+      username: user.username
+    }
+  });
+};
+
 
 // Expose data and methods explicitly for parent components if needed
 defineExpose({
@@ -572,6 +626,7 @@ defineExpose({
   searchQuery,
   sortOption,
   relationshipStatus,
+   userId,
   loggedInUsername,
 
   searchUser,
@@ -605,6 +660,7 @@ defineExpose({
   modalAction,
   modalActionText,
   closeModal,
+  startChat
 });
 </script>
 <style src="./Posts.css"></style>
