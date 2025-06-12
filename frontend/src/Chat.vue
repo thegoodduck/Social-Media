@@ -150,23 +150,29 @@ export default {
       }
     },
 
-    handleUserClick(user) {
-      if (user.username === this.loggedInUsername) return
-      
-      // Batch localStorage updates
-      const updates = {
-        chatWith: user.username,
-        chatWithId: user.id,
-        profileImage: user.profile_picture || 'default-pfp.jpg'
-      }
-      
-      Object.entries(updates).forEach(([key, value]) => {
-        localStorage.setItem(key, value)
-      })
-      
-      window.location.href = 'https://latestnewsandaffairs.site/public/react.html'
-    },
+handleUserClick(user) {
+  if (user.username === this.loggedInUsername) return;
 
+  // Store chat target details for Chatbox.vue to use
+  const updates = {
+    chatWith: user.username,
+    chatWithId: user.id,
+    profileImage: user.profile_picture || 'default-pfp.jpg'
+  };
+
+  Object.entries(updates).forEach(([key, value]) => {
+    localStorage.setItem(key, value);
+  });
+
+  // Navigate using Vue Router to Chatbox.vue
+  this.$router.push({
+    name: 'Chatbox',
+    params: {
+      userId: user.id,
+      username: user.username
+    }
+  });
+},
     getColorForUsername(name) {
       if (!this.userColors.has(name)) {
         const colors = [
@@ -304,7 +310,9 @@ export default {
 </script>
 <style scoped>
 .chat-section {
-    padding: 20px;
+
+     padding: 16px;
+    border-radius: 12px;
     min-height: 650px;
     height: 100vh;        /* Fill the full viewport height */
     width: 100%;          /* Ensure full width */
