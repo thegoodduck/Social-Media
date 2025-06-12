@@ -1,16 +1,38 @@
 import { createRouter, createWebHistory } from 'vue-router';
+
 import Posts from '../Posts.vue';
 import Search2 from '../Search2.vue';
+import Chat from '../Chat.vue';
+import Chatbox from '../Chatbox.vue'; // One-on-one chat
 
 const routes = [
-  { path: '/', name: 'Posts', component: Posts },
-  { path: '/user/:username', name: 'UserProfile', component: Search2, props: true }, // <-- this is critical
+  {
+    path: '/',
+    name: 'Posts',
+    component: Posts
+  },
+  {
+    path: '/user/:username',
+    name: 'UserProfile',
+    component: Search2,
+    props: true
+  },
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: Chat
+  },
+  {
+    path: '/chatbox/:userId/:username',
+    name: 'Chatbox',
+    component: Chatbox,
+    props: true
+  }
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 });
 
 export default router;
-
