@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { registerUser, loginUser, getUserInfo } from './controller/user.js';
+import { registerUser, loginUser, getUserInfo, updateUserProfile } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
 import { createPost, getPosts } from './controller/post.js';
 dotenv.config();
@@ -10,6 +10,10 @@ const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Listen on all network interfaces for Vite/Node dev
+app.set('host', '0.0.0.0');
+
 app.get('/', (req, res) => {
     res.send('Welcome to the backend server!');
 });
@@ -52,6 +56,16 @@ app.get('/api/user-info', (req, res) => {
             res.status(400).json({ error: e.message });
         }
     })();
+});
+app.put('/api/user-update', async (req, res) => {
+    try {
+        const { userId, updates } = req.body;
+        if (!userId || !updates) return res.status(400).json({ error: 'userId and updates required' });
+        const user = await updateUserProfile(userId, updates);
+        res.json({ user });
+    } catch (e) {
+        res.status(400).json({ error: e.message });
+    }
 });
 app.get('/api/posts', getPosts);
 app.post('/api/posts', createPost);

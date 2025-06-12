@@ -460,26 +460,24 @@ export default {
     },
     async fetchUserSettings() {
       try {
-        const username = localStorage.getItem('username');
-        if (!username) {
-          alert('Username not found!');
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          alert('User ID not found!');
           return;
         }
-
-        const response = await fetch(`https://sports321.vercel.app/api/posts?username=${username}`);
-        const data = await response.json();
-
+        const { user } = await this.$api.node.getUserInfo(userId);
         this.userProfile = {
-          username: username,
-          location: data.location || 'Location not available',
-          status: data.status || 'Status not available',
-          profession: data.profession || 'Profession not available',
-          hobby: data.hobby || 'Hobby not available',
-          description: data.description || 'No description available',
-          profilePicture: data.profile_picture?.startsWith('data:image')
-            ? data.profile_picture
-            : `https://sports321.vercel.app/${data.profile_picture || 'default.jpg'}`
+          username: user.username,
+          location: user.location || 'Location not available',
+          status: user.status || 'Status not available',
+          profession: user.profession || 'Profession not available',
+          hobby: user.hobby || 'Hobby not available',
+          description: user.description || 'No description available',
+          profilePicture: user.profilePicture || 'default.jpg',
         };
+        if (user.preferences) {
+          this.settings = { ...this.settings, ...user.preferences };
+        }
       } catch (error) {
         console.error('Error fetching user settings:', error);
         this.userProfile = {
@@ -494,28 +492,18 @@ export default {
       }
     },
     async updateUserProfileField(field, newValue) {
-      const username = localStorage.getItem('username');
-      if (!username) {
-        alert('Username not found!');
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        alert('User ID not found!');
         return;
       }
-
       try {
-        const response = await fetch('https://sports123.vercel.app/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, [field]: newValue })
+        const { user } = await this.$api.node.request('/api/user-update', {
+          method: 'PUT',
+          body: JSON.stringify({ userId, updates: { [field]: newValue } })
         });
-
-        const data = await response.json();
-        const successMessage = `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`;
-
-        if (data.message === successMessage) {
-          alert(`Your ${field} has been updated!`);
-          this.userProfile[field] = newValue;
-        } else {
-          alert(`Failed to update ${field}`);
-        }
+        this.userProfile[field] = user[field];
+        alert(`Your ${field} has been updated!`);
       } catch (error) {
         console.error(`Error updating ${field}:`, error);
         alert(`Failed to update ${field}`);
@@ -571,45 +559,27 @@ export default {
         reader.readAsDataURL(file);
       }
     },
-async saveProfilePicture() {
-  if (!this.newProfilePicture) return;
-
-  try {
-    const username = localStorage.getItem('username');
-    const userId = localStorage.getItem('userId');
-    const authToken = localStorage.getItem('authToken');
-
-    if (!username || !userId || !authToken) {
-      alert('User information not found!');
-      return;
-    }
-
-    const response = await fetch('https://sports123.vercel.app/api/posts', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-      },
-      body: JSON.stringify({ username, userId, profilePicture: this.newProfilePicture })
-    });
-
-    const data = await response.json();
-
-    if (data.message === 'Profile picture updated successfully') {
-      alert('Profile picture updated!');
-      localStorage.setItem('profilePic', this.newProfilePicture);
-      if (data.newToken) {
-        localStorage.setItem('authToken', data.newToken);
+    async saveProfilePicture() {
+      if (!this.newProfilePicture) return;
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          alert('User ID not found!');
+          return;
+        }
+        const { user } = await this.$api.node.request('/api/user-update', {
+          method: 'PUT',
+          body: JSON.stringify({ userId, updates: { profilePicture: this.newProfilePicture } })
+        });
+        this.userProfile.profilePicture = user.profilePicture;
+        localStorage.setItem('profilePic', user.profilePicture);
+        this.newProfilePicture = null;
+        alert('Profile picture updated!');
+      } catch (error) {
+        console.error('Error updating profile picture:', error);
+        alert('Failed to update profile picture');
       }
-      this.newProfilePicture = null;
-    } else {
-      alert(data.message || 'Failed to update profile picture');
-    }
-  } catch (error) {
-    console.error('Error updating profile picture:', error);
-    alert('Failed to update profile picture');
-  }
-},
+    },
     toggleSetting(key) {
       this.settings[key] = !this.settings[key];
       if (key === 'darkMode') {
@@ -654,8 +624,22 @@ async saveProfilePicture() {
       };
     },
     saveSettings() {
-      console.log('Settings saved:', this.settings);
-      alert('Settings saved successfully!');
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        alert('User ID not found!');
+        return;
+      }
+      this.$api.node.request('/api/user-update', {
+        method: 'PUT',
+        body: JSON.stringify({ userId, updates: { preferences: this.settings } })
+      })
+        .then(() => {
+          alert('Settings saved successfully!');
+        })
+        .catch((error) => {
+          console.error('Error saving settings:', error);
+          alert('Failed to save settings');
+        });
     },
     openBlockedUsers() {
       alert('Navigating to Blocked Users...');
