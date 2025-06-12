@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <!-- Header -->
     <header>
       <h1 style="font-size: 23px; margin-left: 5%">𝓢𝔂𝓷𝓬</h1>
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
@@ -21,50 +20,56 @@
       </div>
     </header>
 
-    <!-- Main Content with Suspense for lazy loading -->
     <main>
       <Suspense>
-        <component :is="currentComponent" v-bind="componentProps" />
+        <router-view />
+
         <template #fallback>
           <div class="loading-spinner">Loading...</div>
         </template>
       </Suspense>
     </main>
 
-    <!-- Navbar -->
+    <Notification ref="notifier" />
+
     <nav class="glassmorphism">
       <ul>
-        <li v-for="tab in tabs" :key="tab.name" 
-            :class="{ active: currentTab === tab.name }" 
-            @click="switchTab(tab.name)">
+        <li
+          v-for="tab in tabs"
+          :key="tab.name"
+          :class="{ active: currentTab === tab.name }"
+          @click="switchTab(tab.name)"
+        >
           <i :class="tab.icon"></i>
         </li>
       </ul>
     </nav>
 
-    <!-- Floating Widget -->
     <Float />
   </div>
 </template>
 
 <script>
-import { defineAsyncComponent, shallowReactive, nextTick } from 'vue'
+import { defineAsyncComponent, shallowReactive } from 'vue'
 
 // Lazy load components
 const Posts = defineAsyncComponent(() => import('./Posts.vue'))
 const Videos = defineAsyncComponent(() => import('./Videos.vue'))
-const Chat = defineAsyncComponent(() => import('./Chat.vue'))
+const Chat = defineAsyncComponent(() => import('./Chat.vue'))        // User list
 const Settings = defineAsyncComponent(() => import('./Settings.vue'))
 const Search2 = defineAsyncComponent(() => import('./Search2.vue'))
 const Float = defineAsyncComponent(() => import('./Float.vue'))
+
+import Chatbox from './Chatbox.vue'  // Single chatbox component
+import Notification from './Notification.vue'
 
 // Cache for decoded JWTs
 const jwtCache = new Map()
 
 export default {
   name: 'App',
-  components: { Posts, Videos, Chat, Settings, Search2, Float },
-  
+  components: { Posts, Videos, Chat, Chatbox, Settings, Search2, Float, Notification },
+
   data() {
     return {
       currentTab: 'posts',
@@ -88,46 +93,24 @@ export default {
     }
   },
 
-  computed: {
-    isSignedIn: () => {
-      const username = this.userProfile.username
-      return username && username !== 'Guest'
-    },
-    
-    currentComponent() {
-      const components = {
-        posts: Posts,
-        videos: Videos,
-        chat: Chat,
-        settings: Settings,
-        search: Search2
-      }
-      return components[this.currentTab] || Posts
-    },
-    
-    componentProps() {
-      const baseProps = {
-        searchQuery: this.searchQuery,
-        username: this.userProfile.username,
-        userId: this.userProfile.userId
-      }
-      
-      if (this.currentTab === 'settings') {
-        return { settings: this.settings, 'onUpdate:settings': this.updateSettings }
-      }
-      
-      if (this.currentTab === 'search') {
-        return { defaultUsername: this.userProfile.username }
-      }
-      
-      return baseProps
+  provide() {
+    return {
+      notify: this.showNotification
     }
   },
 
+  computed: {
+    isSignedIn() {
+      const username = this.userProfile.username
+      return username && username !== 'Guest'
+    }
+  },
+    
+  
   methods: {
     navigateToSearch() {
       this.showProfileMenu = false
-      
+
       if (this.searchQuery.trim()) {
         this.$router.push('/user/' + this.searchQuery.trim())
         this.searchQuery = ''
@@ -136,14 +119,39 @@ export default {
       }
     },
 
+    showNotification(message, isError = false) {
+      const notifier = this.$refs.notifier
+      if (notifier && typeof notifier.showNotification === 'function') {
+        notifier.showNotification(message, isError)
+      } else {
+        console.warn('Notifier not ready yet')
+      }
+    },
+
     switchTab(tab) {
       if (this.currentTab === tab) return
-      
-      this.currentTab = tab
+
       this.showProfileMenu = false
-      
-      if (tab !== 'search') {
-        this.$router.push('/')
+      this.currentTab = tab
+
+      switch (tab) {
+        case 'posts':
+          this.$router.push('/posts')
+          break
+        case 'videos':
+          this.$router.push('/videos')
+          break
+        case 'chat':
+          this.$router.push('/chat')  // User list route
+          break
+        case 'settings':
+          this.$router.push('/settings')
+          break
+        case 'search':
+          this.$router.push('/search')
+          break
+        default:
+          this.$router.push('/')
       }
     },
 
@@ -153,7 +161,7 @@ export default {
 
     decodeJWT(token) {
       if (jwtCache.has(token)) return jwtCache.get(token)
-      
+
       try {
         const base64Url = token.split('.')[1]
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
@@ -181,22 +189,21 @@ export default {
           const res = await fetch('https://1999-theta.vercel.app/api/authorize', {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           })
 
           if (!res.ok) return this.authAction()
-          
+
           const data = await res.json()
-          
-          // Batch localStorage updates
+
           const updates = {
             username: decoded.username,
             userId: decoded.userId || data.user.userId,
             profilePic: decoded.profilePic || data.user.profilePic || 'default-pic.png'
           }
-          
+
           Object.entries(updates).forEach(([key, value]) => {
             localStorage.setItem(key, value)
           })
@@ -235,11 +242,15 @@ export default {
 
     handleRouteChange(to) {
       const routeTabMap = {
-        'UserProfile': 'search',
-        'Posts': 'posts',
-        'Videos': 'videos'
+        UserProfile: 'search',
+        Posts: 'posts',
+        Videos: 'videos',
+        Chat: 'chat',
+        Chatbox: 'chat',
+        Settings: 'settings',
+        Search2: 'search'
       }
-      
+
       this.currentTab = routeTabMap[to.name] || 'posts'
     }
   },
@@ -252,16 +263,13 @@ export default {
   },
 
   async mounted() {
-    // Initialize based on route
     this.handleRouteChange(this.$route)
 
-    // Verify token if exists
     const token = localStorage.getItem('authToken')
     if (token) {
       this.verifyToken(token)
     }
 
-    // Listen for storage changes (throttled)
     let storageTimeout
     const handleStorage = (event) => {
       if (['username', 'userId', 'profilePic'].includes(event.key)) {
@@ -271,10 +279,9 @@ export default {
         }, 100)
       }
     }
-    
+
     window.addEventListener('storage', handleStorage, { passive: true })
-    
-    // Cleanup
+
     this.$once('hook:beforeUnmount', () => {
       window.removeEventListener('storage', handleStorage)
       clearTimeout(storageTimeout)
@@ -284,6 +291,8 @@ export default {
   }
 }
 </script>
+
+
 
 <style scoped>
 .fade-enter-active, .fade-leave-active {
