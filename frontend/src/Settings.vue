@@ -419,6 +419,8 @@ padding: 0 15px 15px 15px;
 }
 </style>
 <script>
+import { nodeAPI } from './config/api.js';
+
 export default {
   name: 'Settings',
   data() {
@@ -465,7 +467,7 @@ export default {
           alert('User ID not found!');
           return;
         }
-        const { user } = await this.$api.node.getUserInfo(userId);
+        const { user } = await nodeAPI.getUserInfo(userId);
         this.userProfile = {
           username: user.username,
           location: user.location || 'Location not available',
@@ -498,7 +500,7 @@ export default {
         return;
       }
       try {
-        const { user } = await this.$api.node.request('/api/user-update', {
+        const { user } = await nodeAPI.request('/api/user-update', {
           method: 'PUT',
           body: JSON.stringify({ userId, updates: { [field]: newValue } })
         });
@@ -567,7 +569,7 @@ export default {
           alert('User ID not found!');
           return;
         }
-        const { user } = await this.$api.node.request('/api/user-update', {
+        const { user } = await nodeAPI.request('/api/user-update', {
           method: 'PUT',
           body: JSON.stringify({ userId, updates: { profilePicture: this.newProfilePicture } })
         });
@@ -629,7 +631,7 @@ export default {
         alert('User ID not found!');
         return;
       }
-      this.$api.node.request('/api/user-update', {
+      nodeAPI.request('/api/user-update', {
         method: 'PUT',
         body: JSON.stringify({ userId, updates: { preferences: this.settings } })
       })

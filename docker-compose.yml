@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     build: ./backend
@@ -20,6 +20,8 @@ services:
     depends_on:
       - db
     working_dir: /app
+    volumes:
+      - ./backend:/app
 
   frontend:
     build: ./frontend
@@ -28,6 +30,8 @@ services:
     depends_on:
       - backend
     working_dir: /app
+    volumes:
+      - ./frontend:/app
 
   vidbackend:
     build: ./vidbackend
@@ -36,6 +40,8 @@ services:
     depends_on:
       - db
     working_dir: /app
+    volumes:
+      - ./vidbackend:/app
 
 volumes:
-  pgdata:
+  postgres_data:
