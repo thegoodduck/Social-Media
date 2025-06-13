@@ -6,6 +6,7 @@ import Chat from '../Chat.vue';
 import Chatbox from '../Chatbox.vue'; // One-on-one chat
 import Settings from '../Settings.vue';
 import Videos from '../Videos.vue';
+import Viewer from '../Viewer.vue';
 
 const routes = [
   {
@@ -44,6 +45,11 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings
+  },
+  {
+    path: '/viewer',
+    name: 'Viewer',
+    component: Viewer
   }
 ];
 

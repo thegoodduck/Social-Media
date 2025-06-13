@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
 import { registerUser, loginUser, getUserInfo, updateUserProfile } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
 import { createPost, getPosts } from './controller/post.js';
@@ -69,6 +70,45 @@ app.put('/api/user-update', async (req, res) => {
 });
 app.get('/api/posts', getPosts);
 app.post('/api/posts', createPost);
+
+// Decentralized viewer endpoint: fetches and proxies content from another server
+app.get('/viewer', async (req, res) => {
+    const { url } = req.query;
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'Missing or invalid url parameter' });
+    }
+    try {
+        // Only allow http(s) URLs for security
+        if (!/^https?:\/\//.test(url)) {
+            return res.status(400).json({ error: 'Only http(s) URLs are allowed' });
+        }
+        const fetchRes = await fetch(url, { method: 'GET' });
+        const contentType = fetchRes.headers.get('content-type') || 'application/octet-stream';
+        // Always respond with JSON for errors or unsupported types
+        if (contentType.includes('text/html')) {
+            const html = await fetchRes.text();
+            return res.status(502).json({ error: 'Remote server returned HTML, not API data. Check the URL.', htmlSnippet: html.slice(0, 500) });
+        }
+        if (contentType.includes('application/json')) {
+            const json = await fetchRes.json();
+            return res.json(json);
+        } else if (contentType.includes('text/plain')) {
+            const text = await fetchRes.text();
+            return res.type('text/plain').send(text);
+        } else if (fetchRes.body && (contentType.startsWith('video/') || contentType.startsWith('image/'))) {
+            // For video/image, stream as-is
+            res.set('content-type', contentType);
+            return fetchRes.body.pipe(res);
+        } else {
+            // For all other types, return JSON error, never HTML
+            return res.status(502).json({ error: 'Unsupported content-type from remote server', contentType });
+        }
+    } catch (e) {
+        // Always return JSON for errors
+        res.status(502).json({ error: 'Failed to fetch from remote server', details: e && e.message ? e.message : String(e) });
+    }
+});
+
 export default app;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
