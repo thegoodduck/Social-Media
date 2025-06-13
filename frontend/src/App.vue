@@ -265,6 +265,21 @@ export default {
   async mounted() {
     this.handleRouteChange(this.$route)
 
+    // Validate userId: must be a valid UUID (36 chars, 4 dashes)
+    const userId = localStorage.getItem('userId')
+    if (userId && !/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(userId)) {
+      // Invalid userId, force logout and clear storage
+      localStorage.clear()
+      Object.assign(this.userProfile, {
+        username: 'Guest',
+        userId: null,
+        profilePic: 'default-pic.png'
+      })
+      this.showNotification('Session expired or invalid user. Please log in again.', true)
+      this.$router.push('/')
+      return
+    }
+
     const token = localStorage.getItem('authToken')
     if (token) {
       this.verifyToken(token)

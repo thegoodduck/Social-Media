@@ -5,12 +5,23 @@ import Search2 from '../Search2.vue';
 import Chat from '../Chat.vue';
 import Chatbox from '../Chatbox.vue'; // One-on-one chat
 import Settings from '../Settings.vue';
+import Videos from '../Videos.vue';
 
 const routes = [
   {
     path: '/',
     name: 'Posts',
     component: Posts
+  },
+  {
+    path: '/posts',
+    name: 'PostsPage',
+    component: Posts
+  },
+  {
+    path: '/videos',
+    name: 'Videos',
+    component: Videos
   },
   {
     path: '/user/:username',

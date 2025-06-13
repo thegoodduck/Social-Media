@@ -98,12 +98,19 @@ export default {
     async loadVideos() {
       this.loading = true;
       this.error = null;
-      
       try {
-        const response = await djangoAPI.request(`/api/feed-json/?user_id=${this.userId || 'anonymous'}`);
-        
-        if (response.success) {
-          this.videos = response.feed;
+        // Updated endpoint and response handling for Django backend
+        const response = await djangoAPI.request(`/feed-json/`);
+        if (response.videos) {
+          // Map Django's response to expected frontend format
+          this.videos = response.videos.map(v => ({
+            id: v.id,
+            video_id: v.video_id || v.id,
+            caption: v.caption,
+            created_at: v.created_at,
+            video_url: v.video_url,
+            user: { username: v.user, avatar: 'https://i.pravatar.cc/40' }
+          }));
         } else {
           this.error = 'Failed to load videos';
         }
@@ -124,26 +131,25 @@ export default {
         alert('Please fill in all fields');
         return;
       }
-      
       this.uploading = true;
-      
       try {
         const formData = new FormData();
         formData.append('caption', this.uploadForm.caption);
-        formData.append('video_file', this.uploadForm.videoFile);
-        
-        const response = await djangoAPI.createVideoPost(formData);
-        
-        // Reset form
+        formData.append('video', this.uploadForm.videoFile); // Django expects 'video'
+        // Optionally add user if needed: formData.append('user', this.userId || 'anonymous');
+        // If you require authentication, add the token header here
+        const response = await fetch('http://localhost:8000/videopost/', {
+          method: 'POST',
+          // headers: { Authorization: `Token <your_token_here>` },
+          body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Upload failed');
         this.uploadForm.caption = '';
         this.uploadForm.videoFile = null;
         document.getElementById('videoFile').value = '';
-        
-        // Reload videos
         await this.loadVideos();
-        
         alert('Video uploaded successfully!');
-        
       } catch (error) {
         console.error('Error uploading video:', error);
         alert('Failed to upload video: ' + error.message);
@@ -153,7 +159,9 @@ export default {
     },
     
     getVideoUrl(videoId) {
-      return `${djangoAPI.baseURL}/api/videopost/?video_id=${videoId}&user_id=${this.userId || 'anonymous'}`;
+      // Use the direct video_url from the feed, not the API endpoint
+      const video = this.videos.find(v => v.video_id === videoId || v.id === videoId);
+      return video ? video.video_url : '';
     },
     
     async trackVideoWatch(videoId) {
