@@ -4,6 +4,7 @@ import Posts from '../Posts.vue';
 import Search2 from '../Search2.vue';
 import Chat from '../Chat.vue';
 import Chatbox from '../Chatbox.vue'; // One-on-one chat
+import Settings from '../Settings.vue';
 
 const routes = [
   {
@@ -27,6 +28,11 @@ const routes = [
     name: 'Chatbox',
     component: Chatbox,
     props: true
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: Settings
   }
 ];
 

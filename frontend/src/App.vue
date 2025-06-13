@@ -282,17 +282,10 @@ export default {
 
     window.addEventListener('storage', handleStorage, { passive: true })
     // Cleanup for Vue 3
-    if (this.$.appContext && this.$.appContext.app) {
-      this.$.appContext.app.config.globalProperties.__onUnmount = () => {
-        window.removeEventListener('storage', handleStorage)
-        clearTimeout(storageTimeout)
-      }
-    }
-
-    this.$once('hook:beforeUnmount', () => {
+    this.$.appContext.app.config.globalProperties.__onUnmount = () => {
       window.removeEventListener('storage', handleStorage)
       clearTimeout(storageTimeout)
-    })
+    }
 
     this.updateUserProfile()
   }

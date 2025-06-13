@@ -425,7 +425,7 @@ export default {
   name: 'Settings',
   data() {
     return {
-      activeSection: null, // Start with no section active
+      activeSection: null,
       userProfile: {
         username: '',
         profilePicture: 'default.jpg',
@@ -442,7 +442,9 @@ export default {
         privateAccount: false,
         showOnlineStatus: true,
         twoFactorAuth: false
-      }
+      },
+      loading: false,
+      message: ''
     };
   },
   computed: {
@@ -461,10 +463,11 @@ export default {
       this.activeSection = this.activeSection === section ? null : section;
     },
     async fetchUserSettings() {
+      this.loading = true;
       try {
         const userId = localStorage.getItem('userId');
         if (!userId) {
-          alert('User ID not found!');
+          this.message = 'User ID not found!';
           return;
         }
         const { user } = await nodeAPI.getUserInfo(userId);
@@ -481,22 +484,16 @@ export default {
           this.settings = { ...this.settings, ...user.preferences };
         }
       } catch (error) {
+        this.message = 'Error fetching user settings.';
         console.error('Error fetching user settings:', error);
-        this.userProfile = {
-          username: localStorage.getItem('username') || '',
-          profilePicture: 'default.jpg',
-          description: 'No description available',
-          location: 'Location not available',
-          status: 'Status not available',
-          profession: 'Profession not available',
-          hobby: 'Hobby not available'
-        };
+      } finally {
+        this.loading = false;
       }
     },
     async updateUserProfileField(field, newValue) {
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        alert('User ID not found!');
+        this.message = 'User ID not found!';
         return;
       }
       try {
@@ -505,10 +502,10 @@ export default {
           body: JSON.stringify({ userId, updates: { [field]: newValue } })
         });
         this.userProfile[field] = user[field];
-        alert(`Your ${field} has been updated!`);
+        this.message = `Your ${field} has been updated!`;
       } catch (error) {
+        this.message = `Failed to update ${field}`;
         console.error(`Error updating ${field}:`, error);
-        alert(`Failed to update ${field}`);
       }
     },
     changeUsername() {
@@ -566,7 +563,7 @@ export default {
       try {
         const userId = localStorage.getItem('userId');
         if (!userId) {
-          alert('User ID not found!');
+          this.message = 'User ID not found!';
           return;
         }
         const { user } = await nodeAPI.request('/api/user-update', {
@@ -576,10 +573,10 @@ export default {
         this.userProfile.profilePicture = user.profilePicture;
         localStorage.setItem('profilePic', user.profilePicture);
         this.newProfilePicture = null;
-        alert('Profile picture updated!');
+        this.message = 'Profile picture updated!';
       } catch (error) {
+        this.message = 'Failed to update profile picture';
         console.error('Error updating profile picture:', error);
-        alert('Failed to update profile picture');
       }
     },
     toggleSetting(key) {
@@ -625,46 +622,48 @@ export default {
         transition: 'left 0.3s ease'
       };
     },
-    saveSettings() {
+    async saveSettings() {
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        alert('User ID not found!');
+        this.message = 'User ID not found!';
         return;
       }
-      nodeAPI.request('/api/user-update', {
-        method: 'PUT',
-        body: JSON.stringify({ userId, updates: { preferences: this.settings } })
-      })
-        .then(() => {
-          alert('Settings saved successfully!');
-        })
-        .catch((error) => {
-          console.error('Error saving settings:', error);
-          alert('Failed to save settings');
+      try {
+        await nodeAPI.request('/api/user-update', {
+          method: 'PUT',
+          body: JSON.stringify({ userId, updates: { preferences: this.settings } })
         });
+        this.message = 'Settings saved successfully!';
+      } catch (error) {
+        this.message = 'Failed to save settings';
+        console.error('Error saving settings:', error);
+      }
     },
     openBlockedUsers() {
-      alert('Navigating to Blocked Users...');
+      this.message = 'Blocked users feature coming soon!';
     },
     viewMyActivity() {
-      alert('View My Activity...');
+      this.message = 'Activity history feature coming soon!';
     },
     viewAboutUs() {
-      alert('View About Us...');
+      this.message = 'About us page coming soon!';
     },
     viewTerms() {
-      alert('View Terms and Conditions...');
+      this.message = 'Terms and conditions page coming soon!';
     },
     logOut() {
-      alert('Logged out...');
+      localStorage.clear();
+      window.location.reload();
     }
   },
   mounted() {
     this.fetchUserSettings();
-    const savedDarkMode = localStorage.getItem('dark-mode');
-    this.settings.darkMode = savedDarkMode;
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark-mode');
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode !== null) {
+      this.settings.darkMode = savedDarkMode === 'true';
+      if (this.settings.darkMode) {
+        document.documentElement.classList.add('dark-mode');
+      }
     }
   }
 };
