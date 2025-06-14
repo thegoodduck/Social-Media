@@ -120,7 +120,13 @@ app.get('/federation/user-info', async (req: Request, res: Response) => {
 // Proxy remote videos
 app.get('/federation/videos', async (req: Request, res: Response) => {
   const { remote } = req.query;
-  if (!remote || typeof remote !== 'string') return res.status(400).json({ error: 'Missing remote parameter' });
+  const trustedServers = [
+    'https://pulse-demo.example.com', // Example trusted server
+    'https://another-trusted-server.com' // Add more trusted servers as needed
+  ];
+  if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
+    return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
+  }
   try {
     const fetchRes = await fetch(`${remote}/api/videos`);
     if (!fetchRes.ok) throw new Error('Remote fetch failed');
