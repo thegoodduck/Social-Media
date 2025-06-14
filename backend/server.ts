@@ -100,7 +100,13 @@ app.get('/federation/posts', async (req: Request, res: Response) => {
 // Proxy remote user info
 app.get('/federation/user-info', async (req: Request, res: Response) => {
   const { remote, userId } = req.query;
-  if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string') return res.status(400).json({ error: 'Missing remote or userId parameter' });
+  const trustedServers = [
+    'https://pulse-demo.example.com', // Example trusted server
+    'https://another-trusted-server.com' // Add more trusted servers as needed
+  ];
+  if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string' || !trustedServers.includes(remote)) {
+    return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
+  }
   try {
     const fetchRes = await fetch(`${remote}/api/user-info?userId=${encodeURIComponent(userId)}`);
     if (!fetchRes.ok) throw new Error('Remote fetch failed');
