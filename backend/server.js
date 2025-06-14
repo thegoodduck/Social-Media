@@ -105,7 +105,8 @@ app.get('/viewer', async (req, res) => {
         }
     } catch (e) {
         // Always return JSON for errors
-        res.status(502).json({ error: 'Failed to fetch from remote server', details: e && e.message ? e.message : String(e) });
+        console.error('Error fetching from remote server:', e);
+        res.status(502).json({ error: 'Failed to fetch from remote server' });
     }
 });
 
