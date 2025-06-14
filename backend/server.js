@@ -109,6 +109,66 @@ app.get('/viewer', async (req, res) => {
     }
 });
 
+// --- Decentralized/Federation Endpoints ---
+
+// Discover remote servers (static for now, could be dynamic in future)
+app.get('/federation/servers', (req, res) => {
+    res.json({
+        servers: [
+            // Example: { name: 'Pulse Demo', url: 'https://pulse-demo.example.com' }
+        ]
+    });
+});
+
+// Proxy remote posts from another Pulse server
+app.get('/federation/posts', async (req, res) => {
+    const { remote } = req.query;
+    if (!remote) return res.status(400).json({ error: 'Missing remote parameter' });
+    try {
+        const fetchRes = await fetch(`${remote}/api/posts`);
+        if (!fetchRes.ok) throw new Error('Remote fetch failed');
+        const data = await fetchRes.json();
+        res.json(data);
+    } catch (e) {
+        res.status(502).json({ error: 'Failed to fetch remote posts', details: e.message });
+    }
+});
+
+// Proxy remote user info
+app.get('/federation/user-info', async (req, res) => {
+    const { remote, userId } = req.query;
+    if (!remote || !userId) return res.status(400).json({ error: 'Missing remote or userId parameter' });
+    try {
+        const fetchRes = await fetch(`${remote}/api/user-info?userId=${encodeURIComponent(userId)}`);
+        if (!fetchRes.ok) throw new Error('Remote fetch failed');
+        const data = await fetchRes.json();
+        res.json(data);
+    } catch (e) {
+        res.status(502).json({ error: 'Failed to fetch remote user info', details: e.message });
+    }
+});
+
+// Proxy remote videos
+app.get('/federation/videos', async (req, res) => {
+    const { remote } = req.query;
+    if (!remote) return res.status(400).json({ error: 'Missing remote parameter' });
+    try {
+        const fetchRes = await fetch(`${remote}/api/videos`);
+        if (!fetchRes.ok) throw new Error('Remote fetch failed');
+        const data = await fetchRes.json();
+        res.json(data);
+    } catch (e) {
+        res.status(502).json({ error: 'Failed to fetch remote videos', details: e.message });
+    }
+});
+
+// Accept incoming federation requests (for future: e.g. push posts, follow, etc.)
+app.post('/federation/inbox', (req, res) => {
+    // For now, just log and accept
+    console.log('Received federation inbox:', req.body);
+    res.json({ status: 'ok' });
+});
+
 export default app;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

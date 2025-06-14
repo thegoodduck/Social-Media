@@ -7,16 +7,12 @@ import rateLimit from 'express-rate-limit';
 import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
 dotenv.config();
 
-
-
 const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors({origin: "*"})); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the backend server!');
@@ -67,8 +63,93 @@ app.post('/api/posts', createPost as any);
 app.post('/api/posts/:postId/like', likePost as any);
 app.post('/api/posts/:postId/dislike', dislikePost as any);
 
-export default app;
+// --- Decentralized/Federation Endpoints ---
+// Use the global fetch API available in Node.js v18+
+// If you need to support older Node.js versions, install 'node-fetch' and import it at the top
+// import fetch from 'node-fetch';
 
+// Discover remote servers (static for now, could be dynamic in future)
+app.get('/federation/servers', (req: Request, res: Response) => {
+  res.json({
+    servers: [
+      // Example: { name: 'Pulse Demo', url: 'https://pulse-demo.example.com' }
+    ]
+  });
+});
+
+// Proxy remote posts from another Pulse server
+app.get('/federation/posts', async (req: Request, res: Response) => {
+  const { remote } = req.query;
+  if (!remote || typeof remote !== 'string') return res.status(400).json({ error: 'Missing remote parameter' });
+  try {
+    const fetchRes = await fetch(`${remote}/api/posts`);
+    if (!fetchRes.ok) throw new Error('Remote fetch failed');
+    const data = await fetchRes.json();
+    res.json(data);
+  } catch (e: any) {
+    res.status(502).json({ error: 'Failed to fetch remote posts', details: e.message });
+  }
+});
+
+// Proxy remote user info
+app.get('/federation/user-info', async (req: Request, res: Response) => {
+  const { remote, userId } = req.query;
+  if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string') return res.status(400).json({ error: 'Missing remote or userId parameter' });
+  try {
+    const fetchRes = await fetch(`${remote}/api/user-info?userId=${encodeURIComponent(userId)}`);
+    if (!fetchRes.ok) throw new Error('Remote fetch failed');
+    const data = await fetchRes.json();
+    res.json(data);
+  } catch (e: any) {
+    res.status(502).json({ error: 'Failed to fetch remote user info', details: e.message });
+  }
+});
+
+// Proxy remote videos
+app.get('/federation/videos', async (req: Request, res: Response) => {
+  const { remote } = req.query;
+  if (!remote || typeof remote !== 'string') return res.status(400).json({ error: 'Missing remote parameter' });
+  try {
+    const fetchRes = await fetch(`${remote}/api/videos`);
+    if (!fetchRes.ok) throw new Error('Remote fetch failed');
+    const data = await fetchRes.json();
+    res.json(data);
+  } catch (e: any) {
+    res.status(502).json({ error: 'Failed to fetch remote videos', details: e.message });
+  }
+});
+
+// API Discovery endpoint for federation (dynamic, based on current post API source)
+app.get('/federation/discover', (req: Request, res: Response) => {
+  // Try to detect the remote API used for posts (from env or config, fallback to local)
+  // You can set this in an env var like FEDERATION_POSTS_API or similar
+  const postsApi = process.env.FEDERATION_POSTS_API || 'http://localhost:3000/api/posts';
+  const userInfoApi = process.env.FEDERATION_USERINFO_API || 'http://localhost:3000/api/user-info';
+  const videosApi = process.env.FEDERATION_VIDEOS_API || 'http://localhost:3000/api/videos';
+
+  // Federation endpoints (always local to this instance)
+  const baseUrl = process.env.FEDERATION_BASE_URL || `http://localhost:${PORT}`;
+
+  res.json({
+    posts: postsApi,
+    userInfo: userInfoApi,
+    videos: videosApi,
+    federationPosts: `${baseUrl}/federation/posts`,
+    federationUserInfo: `${baseUrl}/federation/user-info`,
+    federationVideos: `${baseUrl}/federation/videos`,
+    federationInbox: `${baseUrl}/federation/inbox`,
+    description: 'API discovery for Pulse federation. Endpoints reflect the current remote API configuration.'
+  });
+});
+
+// Accept incoming federation requests (for future: e.g. push posts, follow, etc.)
+app.post('/federation/inbox', (req: Request, res: Response) => {
+  // For now, just log and accept
+  console.log('Received federation inbox:', req.body);
+  res.json({ status: 'ok' });
+});
+
+export default app;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
