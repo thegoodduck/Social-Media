@@ -80,7 +80,13 @@ app.get('/federation/servers', (req: Request, res: Response) => {
 // Proxy remote posts from another Pulse server
 app.get('/federation/posts', async (req: Request, res: Response) => {
   const { remote } = req.query;
-  if (!remote || typeof remote !== 'string') return res.status(400).json({ error: 'Missing remote parameter' });
+  const trustedServers = [
+    'https://pulse-demo.example.com', // Example trusted server
+    'https://another-trusted-server.com' // Add more trusted servers as needed
+  ];
+  if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
+    return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
+  }
   try {
     const fetchRes = await fetch(`${remote}/api/posts`);
     if (!fetchRes.ok) throw new Error('Remote fetch failed');
