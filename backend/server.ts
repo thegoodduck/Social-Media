@@ -87,7 +87,7 @@ app.get('/federation/posts', async (req: Request, res: Response) => {
     const data = await fetchRes.json();
     res.json(data);
   } catch (e: any) {
-    res.status(502).json({ error: 'Failed to fetch remote posts', details: e.message });
+    res.status(502).json({ error: 'Failed to fetch remote posts', message: 'An error occurred while processing the request.' });
   }
 });
 
