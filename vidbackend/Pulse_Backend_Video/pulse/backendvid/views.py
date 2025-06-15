@@ -94,12 +94,18 @@ def create_post(request):
     # Token authentication
     auth_header = request.headers.get('Authorization', '')
     if not auth_header.startswith('Token '):
-        return JsonResponse({'error': 'Missing or invalid token'}, status=401)
+        return JsonResponse({
+            'error': 'Missing or invalid token',
+            'detail': 'You must provide a valid API token in the Authorization header as: Token <your_token>. Example: Authorization: Token 123abc...'
+        }, status=401)
     token_key = auth_header.split(' ')[1]
     try:
         token = Token.objects.get(key=token_key)
     except Token.DoesNotExist:
-        return JsonResponse({'error': 'Invalid token'}, status=401)
+        return JsonResponse({
+            'error': 'Invalid token',
+            'detail': 'The provided token does not exist or is not valid. Please log in or obtain a valid token.'
+        }, status=401)
 
     # Get user from param or token
     user_param = request.POST.get('user')
