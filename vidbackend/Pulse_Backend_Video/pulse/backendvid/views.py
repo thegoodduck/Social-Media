@@ -22,7 +22,9 @@ def custom_token_auth(request):
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=401)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        import logging
+        logging.error(f"Error in custom_token_auth: {e}", exc_info=True)
+        return JsonResponse({'error': 'An internal error has occurred'}, status=400)
 
 
 @csrf_exempt
@@ -35,7 +37,9 @@ def videopost(request):
     token_key = auth_header.split(' ')[1]
     try:
         token = Token.objects.get(key=token_key)
-    except Token.DoesNotExist:
+    except Token.DoesNotExist as e:
+        import logging
+        logging.error(f"Error in videopost - Invalid token: {e}", exc_info=True)
         return JsonResponse({'error': 'Invalid token'}, status=401)
 
     # Get user from param or token
@@ -43,7 +47,9 @@ def videopost(request):
     if user_param:
         try:
             user = User.objects.get(username=user_param)
-        except User.DoesNotExist:
+        except User.DoesNotExist as e:
+            import logging
+            logging.error(f"Error in videopost - User not found: {e}", exc_info=True)
             return JsonResponse({'error': 'User not found'}, status=400)
     else:
         user = token.user
