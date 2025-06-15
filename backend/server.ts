@@ -5,10 +5,30 @@ import type { Request, Response } from 'express';
 import { registerUser, loginUser, getUserInfo } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
 import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
+import fs from 'fs';
+import path from 'path';
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const app = express();
+
+// Load global config.json from project root
+const configPath = path.resolve(__dirname, '../config.json');
+let globalConfig: any = {};
+try {
+  if (fs.existsSync(configPath)) {
+    globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  }
+} catch (e) {
+  console.error('Failed to load config.json:', e);
+}
+
+// Helper to get trusted servers from config
+const getTrustedServers = (): string[] => {
+  return Array.isArray(globalConfig.federationTrustedServers)
+    ? globalConfig.federationTrustedServers
+    : [];
+};
 
 app.use(cors({origin: "*"})); 
 app.use(express.json());
@@ -80,10 +100,7 @@ app.get('/federation/servers', (req: Request, res: Response) => {
 // Proxy remote posts from another Pulse server
 app.get('/federation/posts', async (req: Request, res: Response) => {
   const { remote } = req.query;
-  const trustedServers = [
-    'https://pulse-demo.example.com', // Example trusted server
-    'https://another-trusted-server.com' // Add more trusted servers as needed
-  ];
+  const trustedServers = getTrustedServers();
   if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
     return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
   }
@@ -100,10 +117,7 @@ app.get('/federation/posts', async (req: Request, res: Response) => {
 // Proxy remote user info
 app.get('/federation/user-info', async (req: Request, res: Response) => {
   const { remote, userId } = req.query;
-  const trustedServers = [
-    'https://pulse-demo.example.com', // Example trusted server
-    'https://another-trusted-server.com' // Add more trusted servers as needed
-  ];
+  const trustedServers = getTrustedServers();
   if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string' || !trustedServers.includes(remote)) {
     return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
   }
@@ -120,10 +134,7 @@ app.get('/federation/user-info', async (req: Request, res: Response) => {
 // Proxy remote videos
 app.get('/federation/videos', async (req: Request, res: Response) => {
   const { remote } = req.query;
-  const trustedServers = [
-    'https://pulse-demo.example.com', // Example trusted server
-    'https://another-trusted-server.com' // Add more trusted servers as needed
-  ];
+  const trustedServers = getTrustedServers();
   if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
     return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
   }
