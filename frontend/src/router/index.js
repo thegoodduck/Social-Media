@@ -58,4 +58,34 @@ const router = createRouter({
   routes
 });
 
+// Example: Simple auth check (replace with real logic)
+function isAuthenticated() {
+  // Replace with actual auth check (e.g., from localStorage, Vuex, or API)
+  return !!localStorage.getItem('userToken');
+}
+
+// Global navigation guard for protected routes
+router.beforeEach((to, from, next) => {
+  // Example: Protect /settings route
+  if (to.path === '/settings' && !isAuthenticated()) {
+    // Optionally emit a global notification event here
+    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Please log in to access settings.' } }));
+    return next('/');
+  }
+  // Emit loading event for route change
+  window.dispatchEvent(new Event('route-loading'));
+  next();
+});
+
+// Global error handler for navigation failures
+router.onError((error) => {
+  // Emit a global notification event for errors
+  window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: error.message || 'Navigation error' } }));
+});
+
+// Optionally, listen for route changes to hide loading spinner
+router.afterEach(() => {
+  window.dispatchEvent(new Event('route-loaded'));
+});
+
 export default router;

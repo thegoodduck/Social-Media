@@ -28,8 +28,29 @@ def custom_token_auth(request):
 
 
 @csrf_exempt
-@require_POST
 def videopost(request):
+    from .models import VideoPost
+    if request.method == 'GET':
+        video_id = request.GET.get('video_id')
+        if not video_id:
+            return JsonResponse({'error': 'Missing video_id'}, status=400)
+        try:
+            video = VideoPost.objects.get(id=video_id)
+        except VideoPost.DoesNotExist:
+            return JsonResponse({'error': 'Video not found'}, status=404)
+        # Serve the video file directly if possible
+        from django.conf import settings
+        import os
+        video_path = video.video_url
+        if video_path.startswith('/media/'):
+            video_path = video_path[len('/media/'):]
+        abs_path = os.path.join(settings.MEDIA_ROOT, video_path)
+        if os.path.exists(abs_path):
+            from django.http import FileResponse
+            return FileResponse(open(abs_path, 'rb'), content_type='video/mp4')
+        # If not found, just return the video_url
+        return JsonResponse({'video_url': video.video_url, 'caption': video.caption, 'user': video.user.username})
+
     # Token authentication
     auth_header = request.headers.get('Authorization', '')
     if not auth_header.startswith('Token '):
@@ -62,7 +83,6 @@ def videopost(request):
     video_url = default_storage.url(filename)
 
     # Save VideoPost
-    from .models import VideoPost
     caption = request.POST.get('caption', '')
     VideoPost.objects.create(user=user, caption=caption, video_url=video_url)
     return JsonResponse({'success': True, 'video_url': video_url, 'user': user.username, 'caption': caption})

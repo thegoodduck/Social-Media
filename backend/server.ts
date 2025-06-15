@@ -7,7 +7,12 @@ import rateLimit from 'express-rate-limit';
 import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 dotenv.config();
+
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -83,6 +88,13 @@ app.post('/api/posts', createPost as any);
 app.post('/api/posts/:postId/like', likePost as any);
 app.post('/api/posts/:postId/dislike', dislikePost as any);
 
+// Helper to wrap async route handlers for Express/TypeScript
+function wrapAsync(fn: any) {
+  return function(req: Request, res: Response, next: any) {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+}
+
 // --- Decentralized/Federation Endpoints ---
 // Use the global fetch API available in Node.js v18+
 // If you need to support older Node.js versions, install 'node-fetch' and import it at the top
@@ -98,7 +110,7 @@ app.get('/federation/servers', (req: Request, res: Response) => {
 });
 
 // Proxy remote posts from another Pulse server
-app.get('/federation/posts', async (req: Request, res: Response) => {
+app.get('/federation/posts', wrapAsync(async (req: Request, res: Response) => {
   const { remote } = req.query;
   const trustedServers = getTrustedServers();
   if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
@@ -112,10 +124,10 @@ app.get('/federation/posts', async (req: Request, res: Response) => {
   } catch (e: any) {
     res.status(502).json({ error: 'Failed to fetch remote posts', message: 'An error occurred while processing the request.' });
   }
-});
+}));
 
 // Proxy remote user info
-app.get('/federation/user-info', async (req: Request, res: Response) => {
+app.get('/federation/user-info', wrapAsync(async (req: Request, res: Response) => {
   const { remote, userId } = req.query;
   const trustedServers = getTrustedServers();
   if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string' || !trustedServers.includes(remote)) {
@@ -129,10 +141,10 @@ app.get('/federation/user-info', async (req: Request, res: Response) => {
   } catch (e: any) {
     res.status(502).json({ error: 'Failed to fetch remote user info', details: e.message });
   }
-});
+}));
 
 // Proxy remote videos
-app.get('/federation/videos', async (req: Request, res: Response) => {
+app.get('/federation/videos', wrapAsync(async (req: Request, res: Response) => {
   const { remote } = req.query;
   const trustedServers = getTrustedServers();
   if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
@@ -146,7 +158,7 @@ app.get('/federation/videos', async (req: Request, res: Response) => {
   } catch (e: any) {
     res.status(502).json({ error: 'Failed to fetch remote videos', details: e.message });
   }
-});
+}));
 
 // API Discovery endpoint for federation (dynamic, based on current post API source)
 app.get('/federation/discover', (req: Request, res: Response) => {

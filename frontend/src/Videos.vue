@@ -138,7 +138,8 @@ export default {
         formData.append('video', this.uploadForm.videoFile); // Django expects 'video'
         // Optionally add user if needed: formData.append('user', this.userId || 'anonymous');
         // If you require authentication, add the token header here
-        const response = await fetch('http://localhost:8000/videopost/', {
+        // Use API config for video upload endpoint
+        const response = await djangoAPI.request('/api/videopost/', {
           method: 'POST',
           // headers: { Authorization: `Token <your_token_here>` },
           body: formData
